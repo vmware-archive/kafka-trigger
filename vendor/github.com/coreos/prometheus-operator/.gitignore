@@ -1,0 +1,10 @@
+/operator
+.build/
+*~
+*.tgz
+requirements.lock
+.idea
+*.iml
+.DS_Store
+__pycache__
+.env/
