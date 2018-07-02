@@ -26,3 +26,9 @@ import:
   version: v1.14.0
 - package: github.com/bsm/sarama-cluster
   version: v2.1.12
+- package: github.com/kubeless/kubeless
+  version: v1.0.0-alpha.6
+- package: github.com/coreos/prometheus-operator
+  version: 197eb012d973f5aaf4d0446fd8f638f1b9067128
+  subpackages:
+  - pkg/client/monitoring/v1alpha1
