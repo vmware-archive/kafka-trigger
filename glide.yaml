@@ -1,0 +1,28 @@
+package: github.com/kubeless/kafka-trigger
+ignore:
+- kubeless
+import:
+- package: github.com/sirupsen/logrus
+  version: 768a92a02685ee7535069fc1581341b41bab9b72
+- package: github.com/spf13/cobra
+  version: v0.0.3
+- package: github.com/spf13/pflag
+  version: v1.0.1
+- package: k8s.io/apimachinery
+  version: kubernetes-1.8.7
+- package: k8s.io/client-go
+  version: v5.0.0
+  subpackages:
+  - plugin/pkg/client/auth/gcp
+- package: k8s.io/api
+  version: kubernetes-1.8.7
+- package: k8s.io/code-generator
+  version: kubernetes-1.9.7
+- package: k8s.io/gengo
+  version: 93fa717586400daaf96f9c88d0e708c80272627f
+- package: golang.org/x/sys
+  version: 7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce
+- package: github.com/Shopify/sarama
+  version: v1.14.0
+- package: github.com/bsm/sarama-cluster
+  version: v2.1.12
