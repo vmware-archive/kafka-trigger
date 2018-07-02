@@ -24,17 +24,12 @@ import (
 
 type KubelessV1beta1Interface interface {
 	RESTClient() rest.Interface
-	FunctionsGetter
 	KafkaTriggersGetter
 }
 
 // KubelessV1beta1Client is used to interact with features provided by the kubeless.io group.
 type KubelessV1beta1Client struct {
 	restClient rest.Interface
-}
-
-func (c *KubelessV1beta1Client) Functions(namespace string) FunctionInterface {
-	return newFunctions(c, namespace)
 }
 
 func (c *KubelessV1beta1Client) KafkaTriggers(namespace string) KafkaTriggerInterface {

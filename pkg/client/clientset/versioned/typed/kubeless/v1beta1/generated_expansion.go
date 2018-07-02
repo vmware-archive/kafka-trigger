@@ -15,6 +15,4 @@ limitations under the License.
 */
 package v1beta1
 
-type FunctionExpansion interface{}
-
 type KafkaTriggerExpansion interface{}

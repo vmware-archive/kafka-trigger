@@ -18,14 +18,6 @@ limitations under the License.
 
 package v1beta1
 
-// FunctionListerExpansion allows custom methods to be added to
-// FunctionLister.
-type FunctionListerExpansion interface{}
-
-// FunctionNamespaceListerExpansion allows custom methods to be added to
-// FunctionNamespaceLister.
-type FunctionNamespaceListerExpansion interface{}
-
 // KafkaTriggerListerExpansion allows custom methods to be added to
 // KafkaTriggerLister.
 type KafkaTriggerListerExpansion interface{}
