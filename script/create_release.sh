@@ -2,7 +2,7 @@
 set -e
 
 REPO_NAME=kubeless
-REPO_DOMAIN=kubeless
+REPO_DOMAIN=kafka-trigger
 TAG=${1:?}
 MANIFESTS=${2:?} # Space separated list of manifests to publish
 
@@ -25,7 +25,7 @@ if [[ $repo_check == *"Not Found"* ]]; then
   echo "Not found a Github repository for $REPO_DOMAIN/$REPO_NAME, it is not possible to publish it" > /dev/stderr
   exit 1
 else
-  RELEASE_ID=$(release_tag $TAG $REPO_DOMAIN $REPO_NAME | jq '.id') 
+  RELEASE_ID=$(release_tag $TAG $REPO_DOMAIN $REPO_NAME | jq '.id')
 fi
 
 IFS=' ' read -r -a manifests <<< "$MANIFESTS"
