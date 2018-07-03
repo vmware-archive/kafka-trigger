@@ -23,14 +23,15 @@ import (
 	"syscall"
 
 	"github.com/kubeless/kafka-trigger/pkg/controller"
-	"github.com/kubeless/kafka-trigger/pkg/utils"
+	kafkautils "github.com/kubeless/kafka-trigger/pkg/utils"
 	"github.com/kubeless/kafka-trigger/pkg/version"
+	kubelessutils "github.com/kubeless/kubeless/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 const (
-	globalUsage = `` //TODO: adding explanation
+	globalUsage = `Kafka trigger controller adds support for Kafka topic as event source to Kubeless functions`
 )
 
 var rootCmd = &cobra.Command{
@@ -38,13 +39,20 @@ var rootCmd = &cobra.Command{
 	Short: "Kafka controller",
 	Long:  globalUsage,
 	Run: func(cmd *cobra.Command, args []string) {
-		kubelessClient, err := utils.GetFunctionClientInCluster()
+
+		kubelessClient, err := kubelessutils.GetFunctionClientInCluster()
 		if err != nil {
-			logrus.Fatalf("Cannot get kubeless client: %v", err)
+			logrus.Fatalf("Cannot get kubeless CR API client: %v", err)
+		}
+
+		kafkaClient, err := kafkautils.GetTriggerClientInCluster()
+		if err != nil {
+			logrus.Fatalf("Cannot get kafka trigger CR API client: %v", err)
 		}
 
 		kafkaTriggerCfg := controller.KafkaTriggerConfig{
-			TriggerClient: kubelessClient,
+			TriggerClient:  kafkaClient,
+			KubelessClient: kubelessClient,
 		}
 
 		kafkaTriggerController := controller.NewKafkaTriggerController(kafkaTriggerCfg)

@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	kubelessutil "github.com/kubeless/kubeless/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -57,7 +58,7 @@ func GetHTTPReq(clientset kubernetes.Interface, funcName, namespace, eventNamesp
 		return nil, fmt.Errorf("Unable to create request %v", err)
 	}
 	timestamp := time.Now().UTC()
-	eventID, err := GetRandString(11)
+	eventID, err := kubelessutil.GetRandString(11)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create a event-ID %v", err)
 	}

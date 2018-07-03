@@ -21,11 +21,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 
-	kubelessApi "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
+	kafkaApi "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
 	"github.com/sirupsen/logrus"
 
 	"k8s.io/api/autoscaling/v2beta1"
@@ -38,7 +37,6 @@ import (
 
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	monitoringv1alpha1 "github.com/coreos/prometheus-operator/pkg/client/monitoring/v1alpha1"
 
@@ -86,6 +84,20 @@ func BuildOutOfClusterConfig() (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 }
 
+// GetTriggerClientInCluster returns function clientset to the request from inside of cluster
+func GetTriggerClientInCluster() (versioned.Interface, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	kafkaClient, err := versioned.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return kafkaClient, nil
+}
+
 // GetClientOutOfCluster returns a k8s clientset to the request from outside of cluster
 func GetClientOutOfCluster() kubernetes.Interface {
 	config, err := BuildOutOfClusterConfig()
@@ -127,112 +139,8 @@ func GetAPIExtensionsClientInCluster() clientsetAPIExtensions.Interface {
 	return clientset
 }
 
-// GetFunctionClientInCluster returns function clientset to the request from inside of cluster
-func GetFunctionClientInCluster() (versioned.Interface, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	kubelessClient, err := versioned.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return kubelessClient, nil
-}
-
-// GetKubelessClientOutCluster returns kubeless clientset to make kubeless API request from outside of cluster
-func GetKubelessClientOutCluster() (versioned.Interface, error) {
-	config, err := BuildOutOfClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	kubelessClient, err := versioned.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return kubelessClient, nil
-}
-
-//GetDefaultNamespace returns the namespace set in current cluster context
-func GetDefaultNamespace() string {
-	rules := clientcmd.NewDefaultClientConfigLoadingRules()
-	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
-	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
-
-	if ns, _, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides).Namespace(); err == nil {
-		return ns
-	}
-	return v1.NamespaceDefault
-}
-
-// GetFunction returns specification of a function
-func GetFunction(funcName, ns string) (kubelessApi.Function, error) {
-	kubelessClient, err := GetKubelessClientOutCluster()
-	if err != nil {
-		return kubelessApi.Function{}, err
-	}
-
-	f, err := kubelessClient.KubelessV1beta1().Functions(ns).Get(funcName, metav1.GetOptions{})
-
-	if err != nil {
-		if k8sErrors.IsNotFound(err) {
-			logrus.Fatalf("Function %s is not found", funcName)
-		}
-		return kubelessApi.Function{}, err
-	}
-
-	return *f, nil
-}
-
-// CreateFunctionCustomResource will create a custom function object
-func CreateFunctionCustomResource(kubelessClient versioned.Interface, f *kubelessApi.Function) error {
-	_, err := kubelessClient.KubelessV1beta1().Functions(f.Namespace).Create(f)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// UpdateFunctionCustomResource applies changes to the function custom object
-func UpdateFunctionCustomResource(kubelessClient versioned.Interface, f *kubelessApi.Function) error {
-	_, err := kubelessClient.KubelessV1beta1().Functions(f.Namespace).Update(f)
-	return err
-}
-
-// PatchFunctionCustomResource applies changes to the function custom object
-func PatchFunctionCustomResource(kubelessClient versioned.Interface, f *kubelessApi.Function) error {
-	data, err := json.Marshal(f)
-	if err != nil {
-		return err
-	}
-	_, err = kubelessClient.KubelessV1beta1().Functions(f.Namespace).Patch(f.Name, types.MergePatchType, data)
-	return err
-}
-
-// DeleteFunctionCustomResource will delete custom function object
-func DeleteFunctionCustomResource(kubelessClient versioned.Interface, funcName, ns string) error {
-	err := kubelessClient.KubelessV1beta1().Functions(ns).Delete(funcName, &metav1.DeleteOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// GetFunctionCustomResource will delete custom function object
-func GetFunctionCustomResource(kubelessClient versioned.Interface, funcName, ns string) (*kubelessApi.Function, error) {
-	functionObj, err := kubelessClient.KubelessV1beta1().Functions(ns).Get(funcName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return functionObj, nil
-}
-
 // CreateKafkaTriggerCustomResource will create a custom function object
-func CreateKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaTrigger *kubelessApi.KafkaTrigger) error {
+func CreateKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaTrigger *kafkaApi.KafkaTrigger) error {
 	_, err := kubelessClient.KubelessV1beta1().KafkaTriggers(kafkaTrigger.Namespace).Create(kafkaTrigger)
 	if err != nil {
 		return err
@@ -241,7 +149,7 @@ func CreateKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaT
 }
 
 // UpdateKafkaTriggerCustomResource applies changes to the function custom object
-func UpdateKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaTrigger *kubelessApi.KafkaTrigger) error {
+func UpdateKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaTrigger *kafkaApi.KafkaTrigger) error {
 	_, err := kubelessClient.KubelessV1beta1().KafkaTriggers(kafkaTrigger.Namespace).Update(kafkaTrigger)
 	return err
 }
@@ -257,63 +165,13 @@ func DeleteKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaT
 }
 
 // GetKafkaTriggerCustomResource will get CronJobTrigger custom resource object
-func GetKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaTriggerName, ns string) (*kubelessApi.KafkaTrigger, error) {
+func GetKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaTriggerName, ns string) (*kafkaApi.KafkaTrigger, error) {
 	kafkaCRD, err := kubelessClient.KubelessV1beta1().KafkaTriggers(ns).Get(kafkaTriggerName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	return kafkaCRD, nil
-}
-
-// GetPodsByLabel returns list of pods which match the label
-// We use this to returns pods to which the function is deployed or pods running controllers
-func GetPodsByLabel(c kubernetes.Interface, ns, k, v string) (*v1.PodList, error) {
-	pods, err := c.Core().Pods(ns).List(metav1.ListOptions{
-		LabelSelector: k + "=" + v,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return pods, nil
-}
-
-// GetReadyPod returns the first pod has passed the liveness probe check
-func GetReadyPod(pods *v1.PodList) (v1.Pod, error) {
-	for _, pod := range pods.Items {
-		isPodRunning := true
-		for _, containerStatus := range pod.Status.ContainerStatuses {
-			if !containerStatus.Ready {
-				isPodRunning = false
-				break
-			}
-		}
-		if isPodRunning {
-			return pod, nil
-		}
-	}
-	return v1.Pod{}, fmt.Errorf("there is no pod ready")
-}
-
-// GetLocalHostname returns hostname
-func GetLocalHostname(config *rest.Config, funcName string) (string, error) {
-	url, err := url.Parse(config.Host)
-	if err != nil {
-		return "", err
-	}
-	host := url.Hostname()
-
-	return fmt.Sprintf("%s.%s.nip.io", funcName, host), nil
-}
-
-// DeleteIngress deletes an ingress rule
-func DeleteIngress(client kubernetes.Interface, name, ns string) error {
-	err := client.ExtensionsV1beta1().Ingresses(ns).Delete(name, &metav1.DeleteOptions{})
-	if err != nil && !k8sErrors.IsNotFound(err) {
-		return err
-	}
-	return nil
 }
 
 func doRESTReq(restIface rest.Interface, groupVersion, verb, resource, elem, namespace string, body interface{}, result interface{}) error {
@@ -410,42 +268,6 @@ func MergeDeployments(destinationDeployment *v1beta1.Deployment, sourceDeploymen
 	initializeEmptyMapsInDeployment(destinationDeployment)
 	initializeEmptyMapsInDeployment(sourceDeployment)
 	return mergo.Merge(destinationDeployment, sourceDeployment)
-}
-
-// FunctionObjAddFinalizer add specified finalizer string to function object
-func FunctionObjAddFinalizer(kubelessClient versioned.Interface, funcObj *kubelessApi.Function, finalizerString string) error {
-	funcObjClone := funcObj.DeepCopy()
-	funcObjClone.ObjectMeta.Finalizers = append(funcObjClone.ObjectMeta.Finalizers, finalizerString)
-	return UpdateFunctionCustomResource(kubelessClient, funcObjClone)
-}
-
-// FunctionObjHasFinalizer checks if function object already has the Function controller finalizer
-func FunctionObjHasFinalizer(funcObj *kubelessApi.Function, finalizerString string) bool {
-	currentFinalizers := funcObj.ObjectMeta.Finalizers
-	for _, f := range currentFinalizers {
-		if f == finalizerString {
-			return true
-		}
-	}
-	return false
-}
-
-// FunctionObjRemoveFinalizer removes the finalizer from the function object
-func FunctionObjRemoveFinalizer(kubelessClient versioned.Interface, funcObj *kubelessApi.Function, finalizerString string) error {
-	funcObjClone := funcObj.DeepCopy()
-	newSlice := make([]string, 0)
-	for _, item := range funcObj.ObjectMeta.Finalizers {
-		if item == finalizerString {
-			continue
-		}
-		newSlice = append(newSlice, item)
-	}
-	if len(newSlice) == 0 {
-		newSlice = nil
-	}
-	funcObjClone.ObjectMeta.Finalizers = newSlice
-	err := UpdateFunctionCustomResource(kubelessClient, funcObjClone)
-	return err
 }
 
 // GetAnnotationsFromCRD gets annotations from a CustomResourceDefinition

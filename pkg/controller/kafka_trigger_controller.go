@@ -31,12 +31,17 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	kubelessApi "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
+	kafkaApi "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
 	"github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned"
 	"github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions"
-	kubelessInformers "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/kubeless/v1beta1"
+	kafkaInformers "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/kubeless/v1beta1"
 	"github.com/kubeless/kafka-trigger/pkg/event-consumers/kafka"
 	"github.com/kubeless/kafka-trigger/pkg/utils"
+	kubelessApi "github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
+	kubelessversioned "github.com/kubeless/kubeless/pkg/client/clientset/versioned"
+	kubelessexternalversion "github.com/kubeless/kubeless/pkg/client/informers/externalversions"
+	kubelessInformers "github.com/kubeless/kubeless/pkg/client/informers/externalversions/kubeless/v1beta1"
+	kubelessutils "github.com/kubeless/kubeless/pkg/utils"
 )
 
 const (
@@ -50,22 +55,25 @@ type KafkaTriggerController struct {
 	kubelessclient   versioned.Interface
 	kubernetesClient kubernetes.Interface
 	queue            workqueue.RateLimitingInterface
-	kafkaInformer    kubelessInformers.KafkaTriggerInformer
+	kafkaInformer    kafkaInformers.KafkaTriggerInformer
 	functionInformer kubelessInformers.FunctionInformer
 }
 
 // KafkaTriggerConfig contains config for KafkaTriggerController
 type KafkaTriggerConfig struct {
-	TriggerClient versioned.Interface
+	TriggerClient  versioned.Interface
+	KubelessClient kubelessversioned.Interface
 }
 
 // NewKafkaTriggerController returns a new *KafkaTriggerController.
 func NewKafkaTriggerController(cfg KafkaTriggerConfig) *KafkaTriggerController {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
-	sharedInformers := externalversions.NewSharedInformerFactory(cfg.TriggerClient, 0)
-	kafkaInformer := sharedInformers.Kubeless().V1beta1().KafkaTriggers()
-	functionInformer := sharedInformers.Kubeless().V1beta1().Functions()
+	kafkaSharedInformers := externalversions.NewSharedInformerFactory(cfg.TriggerClient, 0)
+	kafkaInformer := kafkaSharedInformers.Kubeless().V1beta1().KafkaTriggers()
+
+	kubelessSharedInformers := kubelessexternalversion.NewSharedInformerFactory(cfg.KubelessClient, 0)
+	functionInformer := kubelessSharedInformers.Kubeless().V1beta1().Functions()
 
 	kafkaInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -77,8 +85,8 @@ func NewKafkaTriggerController(cfg KafkaTriggerConfig) *KafkaTriggerController {
 		UpdateFunc: func(old, new interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(new)
 			if err == nil {
-				newKafkaTriggerObj := new.(*kubelessApi.KafkaTrigger)
-				oldKafkaTriggerObj := old.(*kubelessApi.KafkaTrigger)
+				newKafkaTriggerObj := new.(*kafkaApi.KafkaTrigger)
+				oldKafkaTriggerObj := old.(*kafkaApi.KafkaTrigger)
 				if kafkaTriggerObjChanged(oldKafkaTriggerObj, newKafkaTriggerObj) {
 					queue.Add(key)
 				}
@@ -95,7 +103,7 @@ func NewKafkaTriggerController(cfg KafkaTriggerConfig) *KafkaTriggerController {
 	controller := KafkaTriggerController{
 		logger:           logrus.WithField("controller", "kafka-trigger-controller"),
 		kubelessclient:   cfg.TriggerClient,
-		kubernetesClient: utils.GetClient(),
+		kubernetesClient: kubelessutils.GetClient(),
 		kafkaInformer:    kafkaInformer,
 		functionInformer: functionInformer,
 		queue:            queue,
@@ -191,7 +199,7 @@ func (c *KafkaTriggerController) syncKafkaTrigger(key string) error {
 		return nil
 	}
 
-	triggerObj := obj.(*kubelessApi.KafkaTrigger)
+	triggerObj := obj.(*kafkaApi.KafkaTrigger)
 	topic := triggerObj.Spec.Topic
 	if topic == "" {
 		return errors.New("Kafka Trigger Topic can't be empty. Please check the trigger object %s" + key)
@@ -317,7 +325,7 @@ func (c *KafkaTriggerController) FunctionAddedDeletedUpdated(obj interface{}, de
 	c.logger.Infof("Successfully processed update to function object %s Namespace: %s", functionObj.Name, functionObj.Namespace)
 }
 
-func (c *KafkaTriggerController) kafkaTriggerObjNeedFinalizer(triggercObj *kubelessApi.KafkaTrigger) bool {
+func (c *KafkaTriggerController) kafkaTriggerObjNeedFinalizer(triggercObj *kafkaApi.KafkaTrigger) bool {
 	currentFinalizers := triggercObj.ObjectMeta.Finalizers
 	for _, f := range currentFinalizers {
 		if f == kafkaTriggerFinalizer {
@@ -327,7 +335,7 @@ func (c *KafkaTriggerController) kafkaTriggerObjNeedFinalizer(triggercObj *kubel
 	return triggercObj.ObjectMeta.DeletionTimestamp == nil
 }
 
-func (c *KafkaTriggerController) kafkaTriggerHasFinalizer(triggercObj *kubelessApi.KafkaTrigger) bool {
+func (c *KafkaTriggerController) kafkaTriggerHasFinalizer(triggercObj *kafkaApi.KafkaTrigger) bool {
 	currentFinalizers := triggercObj.ObjectMeta.Finalizers
 	for _, f := range currentFinalizers {
 		if f == kafkaTriggerFinalizer {
@@ -337,13 +345,13 @@ func (c *KafkaTriggerController) kafkaTriggerHasFinalizer(triggercObj *kubelessA
 	return false
 }
 
-func (c *KafkaTriggerController) kafkaTriggerObjAddFinalizer(triggercObj *kubelessApi.KafkaTrigger) error {
+func (c *KafkaTriggerController) kafkaTriggerObjAddFinalizer(triggercObj *kafkaApi.KafkaTrigger) error {
 	triggercObjClone := triggercObj.DeepCopy()
 	triggercObjClone.ObjectMeta.Finalizers = append(triggercObjClone.ObjectMeta.Finalizers, kafkaTriggerFinalizer)
 	return utils.UpdateKafkaTriggerCustomResource(c.kubelessclient, triggercObjClone)
 }
 
-func (c *KafkaTriggerController) kafkaTriggerObjRemoveFinalizer(triggercObj *kubelessApi.KafkaTrigger) error {
+func (c *KafkaTriggerController) kafkaTriggerObjRemoveFinalizer(triggercObj *kafkaApi.KafkaTrigger) error {
 	triggercObjClone := triggercObj.DeepCopy()
 	newSlice := make([]string, 0)
 	for _, item := range triggercObjClone.ObjectMeta.Finalizers {
@@ -363,7 +371,7 @@ func (c *KafkaTriggerController) kafkaTriggerObjRemoveFinalizer(triggercObj *kub
 	return nil
 }
 
-func kafkaTriggerObjChanged(oldKafkaTriggerObj, newKafkaTriggerObj *kubelessApi.KafkaTrigger) bool {
+func kafkaTriggerObjChanged(oldKafkaTriggerObj, newKafkaTriggerObj *kafkaApi.KafkaTrigger) bool {
 	// If the kafka trigger object's deletion timestamp is set, then process
 	if oldKafkaTriggerObj.DeletionTimestamp != newKafkaTriggerObj.DeletionTimestamp {
 		return true
