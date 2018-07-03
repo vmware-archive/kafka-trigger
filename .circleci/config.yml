@@ -127,11 +127,7 @@ jobs:
       - run: docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"   
       - run: |
           images=( 
-            $CONTROLLER_IMAGE_NAME
-            $BUILDER_IMAGE_NAME 
             $KAFKA_CONTROLLER_IMAGE_NAME 
-            $NATS_CONTROLLER_IMAGE_NAME
-            $KINESIS_CONTROLLER_IMAGE_NAME
           )
           for image in "${images[@]}"; do
             echo "Pulling ${image}:${CONTROLLER_TAG}"
