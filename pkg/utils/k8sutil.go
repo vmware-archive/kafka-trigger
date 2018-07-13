@@ -139,6 +139,20 @@ func GetAPIExtensionsClientInCluster() clientsetAPIExtensions.Interface {
 	return clientset
 }
 
+// GetKubelessClientOutCluster returns kubeless clientset to make kubeless API request from outside of cluster
+func GetKubelessClientOutCluster() (versioned.Interface, error) {
+	config, err := BuildOutOfClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	kubelessClient, err := versioned.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return kubelessClient, nil
+}
+
 // CreateKafkaTriggerCustomResource will create a custom function object
 func CreateKafkaTriggerCustomResource(kubelessClient versioned.Interface, kafkaTrigger *kafkaApi.KafkaTrigger) error {
 	_, err := kubelessClient.KubelessV1beta1().KafkaTriggers(kafkaTrigger.Namespace).Create(kafkaTrigger)
