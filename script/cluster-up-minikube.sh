@@ -26,7 +26,6 @@ export KUBECONFIG=$HOME/.kube/config
 export PATH=${PATH}:${GOPATH:?}/bin
 
 MINIKUBE_VERSION=${MINIKUBE_VERSION:?}
-export KUBELESS_VERSION=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
 install_bin() {
     local exe=${1:?}
     sudo install -v ${exe} /usr/local/bin || install ${exe} ${GOPATH:?}/bin
@@ -48,27 +47,10 @@ check_or_install_minikube() {
         install_bin ./minikube
     }
 }
-check_or_install_kubeless() {
-    which kubeless || {
-        sudo wget https://github.com/kubeless/kubeless/releases/download/$KUBELESS_VERSION/kubeless_$(go env GOOS)-$(go env GOARCH).zip
-        unzip kubeless_$(go env GOOS)-$(go env GOARCH).zip
-        sudo cp ./bundles/kubeless_$(go env GOOS)-$(go env GOARCH)/kubeless /usr/local/bin/kubeless
-        sudo chmod +x /usr/local/bin/kubeless
-    }
-}
-install_kubeless_manifests() {
-    wget -q -O kubeless-non-rbac.yaml https://github.com/kubeless/kubeless/releases/download/$KUBELESS_VERSION/kubeless-non-rbac-$KUBELESS_VERSION.yaml
-    wget -q -O kubeless.yaml https://github.com/kubeless/kubeless/releases/download/$KUBELESS_VERSION/kubeless-$KUBELESS_VERSION.yaml
-}
-
 # Install nsenter if missing
 check_or_build_nsenter
 # Install minikube if missing
 check_or_install_minikube
-# Install Kubeless if missing
-check_or_install_kubeless
-# Install Kubeless manifests
-install_kubeless_manifests
 
 MINIKUBE_BIN=$(which minikube)
 

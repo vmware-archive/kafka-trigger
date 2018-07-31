@@ -88,6 +88,14 @@ jobs:
       - run: make test
       - run: make validation
       - run: make all-yaml
+      # Install kubeless required files
+      - run: |
+          git clone https://github.com/kubeless/kubeless.git
+          cd kubeless
+          make binary
+          make all-yaml
+          cp ./kubeless/kubeless-non-rbac.yaml ./kubeless/kubeless.yaml ..
+          cd -
       - run: |
           mkdir build-manifests
           IFS=' ' read -r -a manifests <<< "$MANIFESTS"
