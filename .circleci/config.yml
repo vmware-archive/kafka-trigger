@@ -95,7 +95,7 @@ jobs:
           make binary
           ln -s  ../ksonnet-lib ksonnet-lib
           make all-yaml
-          cp ./kubeless/kubeless-non-rbac.yaml ./kubeless/kubeless.yaml ..
+          cp ./kubeless-non-rbac.yaml ./kubeless.yaml ..
           cd -
       - run: |
           mkdir build-manifests
