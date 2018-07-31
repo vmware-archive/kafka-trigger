@@ -84,19 +84,19 @@ jobs:
       - checkout
       - <<: *exports
       - run: make bootstrap
+      # Install kubeless required files
+      - run: |
+          git clone https://github.com/kubeless/kubeless.git $GOPATH/src/github.com/kubeless/kubeless
+          ln -s $(pwd)/ksonnet-lib $GOPATH/src/github.com/kubeless/kubeless/ksonnet-lib
+          cd $GOPATH/src/github.com/kubeless/kubeless
+          make binary
+          make all-yaml
+          cd -
+          cp $GOPATH/src/github.com/kubeless/kubeless/kubeless-non-rbac.yaml $GOPATH/src/github.com/kubeless/kubeless/kubeless.yaml .
       - run: make VERSION=${CONTROLLER_TAG} binary
       - run: make test
       - run: make validation
       - run: make all-yaml
-      # Install kubeless required files
-      - run: |
-          git clone https://github.com/kubeless/kubeless.git
-          cd kubeless
-          make binary
-          ln -s  ../ksonnet-lib ksonnet-lib
-          make all-yaml
-          cp ./kubeless-non-rbac.yaml ./kubeless.yaml ..
-          cd -
       - run: |
           mkdir build-manifests
           IFS=' ' read -r -a manifests <<< "$MANIFESTS"
@@ -106,7 +106,7 @@ jobs:
           done
       - persist_to_workspace:
           root: /home/circleci/.go_workspace
-          paths: 
+          paths:
             - bin
             - src/github.com/kubeless/kafka-trigger/*yaml
       - store_artifacts:
