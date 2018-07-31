@@ -163,3 +163,4 @@ kafka-zookeeper.yaml
 kafka-zookeeper-openshift.yaml
 nats.yaml
 kinesis.yaml
+/kubeless
