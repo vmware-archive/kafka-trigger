@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-REPO_NAME=kubeless
-REPO_DOMAIN=kafka-trigger
+REPO_NAME=kafka-trigger
+REPO_DOMAIN=kubeless
 TAG=${1:?}
 MANIFESTS=${2:?} # Space separated list of manifests to publish
 
@@ -32,7 +32,4 @@ IFS=' ' read -r -a manifests <<< "$MANIFESTS"
 for f in "${manifests[@]}"; do
   cp ${PROJECT_DIR}/${f}.yaml ${PROJECT_DIR}/${f}-${TAG}.yaml
   upload_asset $REPO_DOMAIN $REPO_NAME "$RELEASE_ID" "${PROJECT_DIR}/${f}-${TAG}.yaml"
-done
-for f in `ls ${PROJECT_DIR}/bundles/kubeless_*.zip`; do
-  upload_asset $REPO_DOMAIN $REPO_NAME $RELEASE_ID $f
 done

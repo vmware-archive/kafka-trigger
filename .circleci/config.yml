@@ -154,6 +154,4 @@ jobs:
       - attach_workspace:
           at: /tmp/go
       - <<: *restore_workspace
-      - run: make VERSION=${CIRCLE_TAG} binary-cross
-      - run: for d in bundles/kubeless_*; do zip -r9 $d.zip $d/; done
       - run: ./script/create_release.sh ${CIRCLE_TAG} "${MANIFESTS}"
