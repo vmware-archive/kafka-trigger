@@ -29,7 +29,7 @@ restore_workspace: &restore_workspace
   run: |
     make bootstrap
     sudo cp -r /tmp/go/bin/* /usr/local/bin/
-    cp -r /tmp/go/src/github.com/kubeless/kafka-trigger/*yaml .
+    cp -r /tmp/go/src/github.com/kubeless/kafka-trigger/build-manifests/*yaml .
 should_test: &should_test
   run: |
     case $CIRCLE_JOB in
@@ -108,7 +108,7 @@ jobs:
           root: /home/circleci/.go_workspace
           paths:
             - bin
-            - src/github.com/kubeless/kafka-trigger/*yaml
+            - src/github.com/kubeless/kafka-trigger/build-manifests/*yaml
       - store_artifacts:
           path: /home/circleci/.go_workspace/bin/kubeless
       - store_artifacts:
