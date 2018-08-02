@@ -20,9 +20,21 @@ local crd = [
   },
 ];
 
+local controllerEnv = [
+  {
+    name: "KUBELESS_NAMESPACE",
+    valueFrom: {fieldRef: {fieldPath: "metadata.namespace"}}
+  },
+  {
+    name: "KUBELESS_CONFIG",
+    value: "kubeless-config"
+  },
+];
+
 local controllerContainer =
   container.default("kafka-trigger-controller", "bitnami/kafka-trigger-controller:latest") +
-  container.imagePullPolicy("IfNotPresent");
+  container.imagePullPolicy("IfNotPresent") +
+  container.env(controllerEnv);
 
 local kubelessLabel = {kubeless: "kafka-trigger-controller"};
 

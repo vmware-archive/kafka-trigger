@@ -177,7 +177,7 @@ _wait_for_kubeless_controller_ready() {
 }
 _wait_for_kubeless_controller_logline() {
     local string="${1:?}"
-    k8s_wait_for_pod_logline "${string}" -n kubeless -l kubeless=controller
+    k8s_wait_for_pod_logline "${string}" -n kubeless -l kubeless=controller -c kubeless-function-controller
 }
 wait_for_ingress() {
     echo_info "Waiting until Nginx pod is ready ..."

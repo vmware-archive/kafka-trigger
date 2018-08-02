@@ -51,6 +51,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		kafkaTriggerCfg := controller.KafkaTriggerConfig{
+			KubeCli:        kubelessutils.GetClient(),
 			TriggerClient:  kafkaClient,
 			KubelessClient: kubelessClient,
 		}
