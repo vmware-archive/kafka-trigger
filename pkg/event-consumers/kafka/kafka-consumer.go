@@ -94,6 +94,7 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 			if more {
 				logrus.Infof("Received Kafka message Partition: %d Offset: %d Key: %s Value: %s ", msg.Partition, msg.Offset, string(msg.Key), string(msg.Value))
 				logrus.Infof("Sending message %s to function %s", msg, funcName)
+				consumer.MarkOffset(msg, "")
 				go func() {
 					req, err := utils.GetHTTPReq(clientset, funcName, ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
 					if err != nil {
@@ -106,7 +107,6 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 						} else {
 							logrus.Infof("Message has sent to function %s successfully", funcName)
 						}
-						consumer.MarkOffset(msg, "")
 					}
 				}()
 			}
