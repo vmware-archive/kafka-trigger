@@ -134,20 +134,20 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 }
 
 func UpdateFunctionPort(consumerID, funcName, ns string, clientset kubernetes.Interface) {
-    // This requires retrying since the kafka controller may create the consumer
-    // before the kubeless controller creates the function service
-    var funcPort string
-    getErr := utils.RetryExp(func() (err error) {
-        funcPort, err = utils.GetFunctionPort(clientset, ns, funcName)
-        if err != nil {
-            return fmt.Errorf("Failed to get function port: %v", err)
-        }
-        return nil
-    })
-    if getErr != nil {
-        logrus.Fatalf("%v", getErr)
-    }
-    portM.Store(consumerID, funcPort)
+	// This requires retrying since the kafka controller may create the consumer
+	// before the kubeless controller creates the function service
+	var funcPort string
+	getErr := utils.RetryExp(func() (err error) {
+		funcPort, err = utils.GetFunctionPort(clientset, ns, funcName)
+		if err != nil {
+			return fmt.Errorf("Failed to get function port: %v", err)
+		}
+		return nil
+	})
+	if getErr != nil {
+		logrus.Fatalf("%v", getErr)
+	}
+	portM.Store(consumerID, funcPort)
 }
 
 // CreateKafkaConsumer creates a goroutine that subscribes to Kafka topic
