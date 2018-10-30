@@ -32,3 +32,5 @@ import:
   version: 197eb012d973f5aaf4d0446fd8f638f1b9067128
   subpackages:
   - pkg/client/monitoring/v1alpha1
+- package: github.com/cenkalti/backoff
+  version: v2.0.0

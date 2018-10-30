@@ -104,6 +104,7 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 				logrus.Infof("Sending message %s to function %s", msg, funcName)
 				consumer.MarkOffset(msg, "")
 				go func() {
+					funcPort, _ := portM.Load(consumerGroupID)
 					req, err := utils.GetHTTPReqWithPort(funcPort.(string), funcName, ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
 					if err != nil {
 						logrus.Errorf("Unable to elaborate request: %v", err)
