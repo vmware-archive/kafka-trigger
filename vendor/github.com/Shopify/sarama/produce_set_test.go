@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -166,16 +167,19 @@ func TestProduceSetCompressedRequestBuilding(t *testing.T) {
 		t.Error("Wrong request version")
 	}
 
-	for _, msgBlock := range req.records["t1"][0].msgSet.Messages {
+	for _, msgBlock := range req.records["t1"][0].MsgSet.Messages {
 		msg := msgBlock.Msg
 		err := msg.decodeSet()
 		if err != nil {
 			t.Error("Failed to decode set from payload")
 		}
-		for _, compMsgBlock := range msg.Set.Messages {
+		for i, compMsgBlock := range msg.Set.Messages {
 			compMsg := compMsgBlock.Msg
 			if compMsg.Version != 1 {
 				t.Error("Wrong compressed message version")
+			}
+			if compMsgBlock.Offset != int64(i) {
+				t.Errorf("Wrong relative inner offset, expected %d, got %d", i, compMsgBlock.Offset)
 			}
 		}
 		if msg.Version != 1 {
@@ -196,6 +200,20 @@ func TestProduceSetV3RequestBuilding(t *testing.T) {
 		Partition: 0,
 		Key:       StringEncoder(TestMessage),
 		Value:     StringEncoder(TestMessage),
+		Headers: []RecordHeader{
+			RecordHeader{
+				Key:   []byte("header-1"),
+				Value: []byte("value-1"),
+			},
+			RecordHeader{
+				Key:   []byte("header-2"),
+				Value: []byte("value-2"),
+			},
+			RecordHeader{
+				Key:   []byte("header-3"),
+				Value: []byte("value-3"),
+			},
+		},
 		Timestamp: now,
 	}
 	for i := 0; i < 10; i++ {
@@ -209,7 +227,7 @@ func TestProduceSetV3RequestBuilding(t *testing.T) {
 		t.Error("Wrong request version")
 	}
 
-	batch := req.records["t1"][0].recordBatch
+	batch := req.records["t1"][0].RecordBatch
 	if batch.FirstTimestamp != now {
 		t.Errorf("Wrong first timestamp: %v", batch.FirstTimestamp)
 	}
@@ -217,6 +235,21 @@ func TestProduceSetV3RequestBuilding(t *testing.T) {
 		rec := batch.Records[i]
 		if rec.TimestampDelta != time.Duration(i)*time.Second {
 			t.Errorf("Wrong timestamp delta: %v", rec.TimestampDelta)
+		}
+
+		if rec.OffsetDelta != int64(i) {
+			t.Errorf("Wrong relative inner offset, expected %d, got %d", i, rec.OffsetDelta)
+		}
+
+		for j, h := range batch.Records[i].Headers {
+			exp := fmt.Sprintf("header-%d", j+1)
+			if string(h.Key) != exp {
+				t.Errorf("Wrong header key, expected %v, got %v", exp, h.Key)
+			}
+			exp = fmt.Sprintf("value-%d", j+1)
+			if string(h.Value) != exp {
+				t.Errorf("Wrong header value, expected %v, got %v", exp, h.Value)
+			}
 		}
 	}
 }

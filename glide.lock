@@ -1,5 +1,5 @@
-hash: 58c209d418b1aca2ab6d101befcc8630cd852359c51c2b250232228f11c977e2
-updated: 2018-07-03T02:10:37.250312502+05:30
+hash: 5fee5648eb81826e750a7bf2172523443a11ad7319ae73b41cd63dfc6071c1d2
+updated: 2018-11-08T07:53:13.228873-08:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -93,9 +93,7 @@ imports:
   - pkg/client/clientset/versioned
   - pkg/client/clientset/versioned/scheme
   - pkg/client/clientset/versioned/typed/kubeless/v1beta1
-  - pkg/client/informers/externalversions
   - pkg/client/informers/externalversions/internalinterfaces
-  - pkg/client/informers/externalversions/kubeless
   - pkg/client/informers/externalversions/kubeless/v1beta1
   - pkg/client/listers/kubeless/v1beta1
   - pkg/functions
@@ -136,7 +134,7 @@ imports:
 - name: github.com/rcrowley/go-metrics
   version: e2704e165165ec55d062f5919b4b29494e9fa790
 - name: github.com/Shopify/sarama
-  version: 240fd146ce68bcafb034cc5dc977229ffbafa8ea
+  version: ec843464b50d4c8b56403ec9d589cf41ea30e722
 - name: github.com/sirupsen/logrus
   version: 768a92a02685ee7535069fc1581341b41bab9b72
 - name: github.com/spf13/cobra
