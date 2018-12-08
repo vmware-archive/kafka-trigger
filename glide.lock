@@ -1,5 +1,5 @@
-hash: 58c209d418b1aca2ab6d101befcc8630cd852359c51c2b250232228f11c977e2
-updated: 2018-07-03T02:10:37.250312502+05:30
+hash: 3c7ba41abf7c111f86cdb5027935136a1b34b4dfb65994125c410b4413c2a0a2
+updated: 2018-12-08T12:14:26.543686619+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -7,7 +7,7 @@ imports:
   - compute/metadata
   - internal
 - name: github.com/bsm/sarama-cluster
-  version: 3001c2453136632aa3219a58ea3795bb584b83b5
+  version: c618e605e15c0d7535f6c96ff8efbb0dba4fd66c
 - name: github.com/coreos/prometheus-operator
   version: 197eb012d973f5aaf4d0446fd8f638f1b9067128
   subpackages:
@@ -86,16 +86,14 @@ imports:
 - name: github.com/juju/ratelimit
   version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
 - name: github.com/kubeless/kubeless
-  version: 25c043b523e641870cbfebabccfc7e1fffdc1ebc
+  version: f7736a43f3464426164017fd0257b8f52f6ccd28
   subpackages:
   - pkg/apis/kubeless
   - pkg/apis/kubeless/v1beta1
   - pkg/client/clientset/versioned
   - pkg/client/clientset/versioned/scheme
   - pkg/client/clientset/versioned/typed/kubeless/v1beta1
-  - pkg/client/informers/externalversions
   - pkg/client/informers/externalversions/internalinterfaces
-  - pkg/client/informers/externalversions/kubeless
   - pkg/client/informers/externalversions/kubeless/v1beta1
   - pkg/client/listers/kubeless/v1beta1
   - pkg/functions
@@ -136,7 +134,7 @@ imports:
 - name: github.com/rcrowley/go-metrics
   version: e2704e165165ec55d062f5919b4b29494e9fa790
 - name: github.com/Shopify/sarama
-  version: 240fd146ce68bcafb034cc5dc977229ffbafa8ea
+  version: ec843464b50d4c8b56403ec9d589cf41ea30e722
 - name: github.com/sirupsen/logrus
   version: 768a92a02685ee7535069fc1581341b41bab9b72
 - name: github.com/spf13/cobra

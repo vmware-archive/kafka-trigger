@@ -23,11 +23,11 @@ import:
 - package: golang.org/x/sys
   version: 7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce
 - package: github.com/Shopify/sarama
-  version: v1.14.0
+  version: v1.19.0
 - package: github.com/bsm/sarama-cluster
-  version: v2.1.12
+  version: v2.1.15
 - package: github.com/kubeless/kubeless
-  version: v1.0.0-alpha.6
+  version: v1.0.0
 - package: github.com/coreos/prometheus-operator
   version: 197eb012d973f5aaf4d0446fd8f638f1b9067128
   subpackages:
