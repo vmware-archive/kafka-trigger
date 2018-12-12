@@ -1,5 +1,5 @@
 hash: 3c7ba41abf7c111f86cdb5027935136a1b34b4dfb65994125c410b4413c2a0a2
-updated: 2018-12-08T12:14:26.543686619+02:00
+updated: 2018-12-12T11:39:50.396704286+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -78,7 +78,7 @@ imports:
 - name: github.com/howeyc/gopass
   version: bf9dde6d0d2c004a008c27aaee91170c786f6db8
 - name: github.com/imdario/mergo
-  version: 163f41321a19dd09362d4c63cc2489db2015f1f4
+  version: 6633656539c1639d9d78127b7d47c622b5d7b6dc
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/json-iterator/go
