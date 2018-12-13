@@ -16,6 +16,8 @@ kafka       ClusterIP   10.55.253.151   <none>        9092/TCP            7h
 zookeeper   ClusterIP   10.55.248.146   <none>        2181/TCP            7h
 ```
 
+**Note**: If you want to use the command `kubeless topic` you need add a label to your Kafka deployment (`kubeless=kafka`) in order for the CLI to find it. 
+
 And Kubeless already running at `kubeless` namespace:
 
 ```console
@@ -55,7 +57,6 @@ spec:
       serviceAccountName: controller-acct
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
-description: CRD object for Kafka trigger type
 kind: CustomResourceDefinition
 metadata:
   name: kafkatriggers.kubeless.io
@@ -131,6 +132,7 @@ hello world
 ```
 
 When using SASL you must add `KAFKA_ENABLE_SASL`, `KAFKA_USERNAME` and `KAFKA_PASSWORD` env var to set authentification (might use a secret).:
+
 ```yaml
 $ echo '
 ---
