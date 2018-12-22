@@ -231,7 +231,7 @@ func (c *KafkaTriggerController) syncKafkaTrigger(key string) error {
 			return err
 		}
 		if len(functions.Items) == 0 {
-			c.logger.Infof("No matching functions found for Kafka trigger %s so marking CRD object for deleteion", key)
+			c.logger.Infof("No matching functions found for Kafka trigger %s so marking CRD object for deletion", key)
 		}
 
 		for _, function := range functions.Items {

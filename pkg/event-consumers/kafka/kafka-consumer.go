@@ -17,8 +17,10 @@ limitations under the License.
 package kafka
 
 import (
+	"fmt"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/Shopify/sarama"
 	"github.com/bsm/sarama-cluster"
@@ -28,9 +30,11 @@ import (
 )
 
 var (
+	mutex     = &sync.Mutex{}
 	stopM     map[string](chan struct{})
 	stoppedM  map[string](chan struct{})
 	consumerM map[string]bool
+	portM     sync.Map // map[string]string
 	brokers   string
 	config    *cluster.Config
 )
@@ -40,13 +44,13 @@ func init() {
 	stoppedM = make(map[string](chan struct{}))
 	consumerM = make(map[string]bool)
 
-	// Init config
-	// taking brokers from env var
+	// taking default brokers from env var
 	brokers = os.Getenv("KAFKA_BROKERS")
 	if brokers == "" {
 		brokers = "kafka.kubeless:9092"
 	}
 	config = cluster.NewConfig()
+	config.ClientID = "kubeless"
 
 	config.Consumer.Return.Errors = true
 	config.Group.Return.Notifications = true
@@ -74,6 +78,10 @@ func init() {
 
 // createConsumerProcess gets messages to a Kafka topic from the broker and send the payload to function service
 func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, clientset kubernetes.Interface, stopchan, stoppedchan chan struct{}) {
+
+	// Sets the value of portM[consumerGroupID]
+	UpdateFunctionPort(consumerGroupID, funcName, ns, clientset)
+
 	// Init consumer
 	brokersSlice := []string{broker}
 	topicsSlice := []string{topic}
@@ -96,7 +104,8 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 				logrus.Infof("Sending message %s to function %s", msg, funcName)
 				consumer.MarkOffset(msg, "")
 				go func() {
-					req, err := utils.GetHTTPReq(clientset, funcName, ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
+					funcPort, _ := portM.Load(consumerGroupID)
+					req, err := utils.GetHTTPReqWithPort(funcPort.(string), funcName, ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
 					if err != nil {
 						logrus.Errorf("Unable to elaborate request: %v", err)
 					} else {
@@ -124,9 +133,29 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 	}
 }
 
+func UpdateFunctionPort(consumerID, funcName, ns string, clientset kubernetes.Interface) {
+	// This requires retrying since the kafka controller may create the consumer
+	// before the kubeless controller creates the function service
+	var funcPort string
+	getErr := utils.RetryExp(func() (err error) {
+		funcPort, err = utils.GetFunctionPort(clientset, ns, funcName)
+		if err != nil {
+			return fmt.Errorf("Failed to get function port: %v", err)
+		}
+		return nil
+	})
+	if getErr != nil {
+		logrus.Fatalf("%v", getErr)
+	}
+	portM.Store(consumerID, funcPort)
+}
+
 // CreateKafkaConsumer creates a goroutine that subscribes to Kafka topic
 func CreateKafkaConsumer(triggerObjName, funcName, ns, topic string, clientset kubernetes.Interface) error {
 	consumerID := generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic)
+	// Lock the consumerM map to prevent create/delete race conditions
+	mutex.Lock()
+	defer mutex.Unlock()
 	if !consumerM[consumerID] {
 		logrus.Infof("Creating Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
 		stopM[consumerID] = make(chan struct{})
@@ -135,6 +164,7 @@ func CreateKafkaConsumer(triggerObjName, funcName, ns, topic string, clientset k
 		consumerM[consumerID] = true
 		logrus.Infof("Created Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
 	} else {
+		go UpdateFunctionPort(consumerID, funcName, ns, clientset)
 		logrus.Infof("Consumer for function %s associated with trigger %s already exists, so just returning", funcName, triggerObjName)
 	}
 	return nil
@@ -143,6 +173,9 @@ func CreateKafkaConsumer(triggerObjName, funcName, ns, topic string, clientset k
 // DeleteKafkaConsumer deletes goroutine created by CreateKafkaConsumer
 func DeleteKafkaConsumer(triggerObjName, funcName, ns, topic string) error {
 	consumerID := generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic)
+	// Lock the consumerM map to prevent multiple goroutines from closing the same channel
+	mutex.Lock()
+	defer mutex.Unlock()
 	if consumerM[consumerID] {
 		logrus.Infof("Stopping consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
 		// delete consumer process

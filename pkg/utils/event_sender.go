@@ -52,7 +52,11 @@ func GetHTTPReq(clientset kubernetes.Interface, funcName, namespace, eventNamesp
 	if err != nil {
 		return nil, err
 	}
+	return GetHTTPReqWithPort(funcPort, funcName, namespace, eventNamespace, method, body)
+}
 
+// GetHTTPReqWithPort returns the http request object that can be used to send a event with payload to function service using a known port
+func GetHTTPReqWithPort(funcPort, funcName, namespace, eventNamespace, method, body string) (*http.Request, error) {
 	req, err := http.NewRequest(method, fmt.Sprintf("http://%s.%s.svc.cluster.local:%s", funcName, namespace, funcPort), strings.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request %v", err)
@@ -63,7 +67,7 @@ func GetHTTPReq(clientset kubernetes.Interface, funcName, namespace, eventNamesp
 		return nil, fmt.Errorf("Failed to create a event-ID %v", err)
 	}
 	req.Header.Add("event-id", eventID)
-	req.Header.Add("event-time", timestamp.String())
+	req.Header.Add("event-time", timestamp.Format(time.RFC3339))
 	req.Header.Add("event-namespace", eventNamespace)
 	if IsJSON(body) {
 		req.Header.Add("Content-Type", "application/json")
