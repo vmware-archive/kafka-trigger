@@ -44,7 +44,7 @@ func init() {
 	//logrus initialization
 	// taking log level from env var
 	logLevel = os.Getenv("KUBELESS_LOG_LEVEL")
-	if (logLevel == "DEBUG") {
+	if logLevel == "DEBUG" {
 		logrus.SetLevel(logrus.DebugLevel)
 	} else {
 		logrus.SetLevel(logrus.InfoLevel)
