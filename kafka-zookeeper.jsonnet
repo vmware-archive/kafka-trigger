@@ -31,7 +31,7 @@ local controllerEnv = [
 ];
 
 local controllerContainer =
-  container.default("kafka-trigger-controller", "bitnami/kafka-trigger-controller:latest") +
+  container.default("kafka-trigger-controller", "kubeless/kafka-trigger-controller:latest") +
   container.imagePullPolicy("IfNotPresent") +
   container.env(controllerEnv);
 

@@ -9,8 +9,7 @@ defaults: &defaults
   working_directory: /home/circleci/.go_workspace/src/github.com/kubeless/kafka-trigger
   environment:
     GOPATH: /home/circleci/.go_workspace
-    CONTROLLER_IMAGE_NAME: bitnami/kubeless-controller-manager
-    KAFKA_CONTROLLER_IMAGE_NAME: bitnami/kafka-trigger-controller
+    KAFKA_CONTROLLER_IMAGE_NAME: kubeless/kafka-trigger-controller
     CGO_ENABLED: "0"
     TEST_DEBUG: "1"
     MINIKUBE_VERSION: v1.2.0
@@ -22,7 +21,6 @@ exports: &exports
   run: |
     CONTROLLER_TAG=${CIRCLE_TAG:-build-$CIRCLE_WORKFLOW_ID}
     echo "export CONTROLLER_TAG=${CONTROLLER_TAG}" >> $BASH_ENV
-    echo "export CONTROLLER_IMAGE=${CONTROLLER_IMAGE_NAME}:${CONTROLLER_TAG}" >> $BASH_ENV
     echo "export KAFKA_CONTROLLER_IMAGE=${KAFKA_CONTROLLER_IMAGE_NAME}:${CONTROLLER_TAG}" >> $BASH_ENV
     echo "export KUBECFG_JPATH=/home/circleci/src/github.com/kubeless/kafka-trigger/ksonnet-lib" >> $BASH_ENV
     echo "export PATH=$(pwd)/bats/libexec:$PATH" >> $BASH_ENV
@@ -104,7 +102,7 @@ jobs:
       - run: |
           IFS=' ' read -r -a manifests <<< "$MANIFESTS"
           for f in "${manifests[@]}"; do
-            sed -i.bak 's/:latest/'":${CONTROLLER_TAG}"'/g' ${f}.yaml
+            sed -E -i.bak 's/image: .*\/kafka-trigger-controller:.*/image: kubeless\/kafka-trigger-controller:'"${CONTROLLER_TAG}"'/g' ${f}.yaml
             cp ${f}.yaml build-manifests/
           done
       - persist_to_workspace:
