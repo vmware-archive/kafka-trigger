@@ -103,7 +103,7 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 		case msg, more := <-consumer.Messages():
 			if more {
 				logrus.Debugf("Received Kafka message Partition: %d Offset: %d Key: %s Value: %s ", msg.Partition, msg.Offset, string(msg.Key), string(msg.Value))
-				logrus.Debugf("Sending message %s to function %s", msg, funcName)
+				logrus.Debugf("Sending message %v to function %s", msg, funcName)
 				consumer.MarkOffset(msg, "")
 				go func() {
 					req, err := utils.GetHTTPReq(clientset, funcName, ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
@@ -161,7 +161,7 @@ func DeleteKafkaConsumer(triggerObjName, funcName, ns, topic string) error {
 		consumerM[consumerID] = false
 		logrus.Infof("Stopped consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
 	} else {
-		logrus.Infof("Consumer for function %s associated with trigger does n't exists. Good enough to skip the stop", funcName, triggerObjName)
+		logrus.Infof("Consumer for function %s associated with trigger %s doesn't exists. Good enough to skip the stop", funcName, triggerObjName)
 	}
 	return nil
 }
