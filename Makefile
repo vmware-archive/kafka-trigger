@@ -16,20 +16,10 @@ export PATH := $(PATH):$(CURDIR)/bats/bin
 
 .PHONY: all
 
-KUBELESS_ENVS := \
-	-e OS_PLATFORM_ARG \
-	-e OS_ARCH_ARG \
-
 default: binary
-
-all:
-	CGO_ENABLED=1 ./script/make.sh
 
 binary:
 	CGO_ENABLED=1 ./script/binary
-
-binary-cross:
-	./script/binary-cli
 
 %.yaml: %.jsonnet
 	$(KUBECFG) show -o yaml $< > $@.tmp
@@ -66,9 +56,6 @@ integration-tests:
 	./script/integration-tests minikube deployment
 	./script/integration-tests minikube basic
 
-minikube-rbac-test:
-	./script/integration-test-rbac minikube
-
 fmt:
 	$(GOFMT) -s -w $(GO_FILES)
 
@@ -82,7 +69,6 @@ ksonnet-lib:
 bootstrap: bats ksonnet-lib
 
 	go get github.com/mitchellh/gox
-	go get github.com/golang/lint/golint
 
 	@if ! which kubecfg >/dev/null; then \
 	sudo wget -q -O /usr/local/bin/kubecfg https://github.com/ksonnet/kubecfg/releases/download/v0.9.0/kubecfg-$$(go env GOOS)-$$(go env GOARCH); \

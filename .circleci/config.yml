@@ -13,8 +13,9 @@ defaults: &defaults
     KAFKA_CONTROLLER_IMAGE_NAME: bitnami/kafka-trigger-controller
     CGO_ENABLED: "0"
     TEST_DEBUG: "1"
-    MINIKUBE_VERSION: v0.25.2
+    MINIKUBE_VERSION: v1.2.0
     MANIFESTS: kafka-zookeeper kafka-zookeeper-openshift
+    GO111MODULE: "on"
 exports: &exports
   # It is not possible to resolve env vars in the environment section:
   # https://discuss.circleci.com/t/using-environment-variables-in-config-yml-not-working/14237
@@ -79,7 +80,7 @@ jobs:
   build:
     <<: *defaults
     docker:
-      - image: circleci/golang:1.9 
+      - image: circleci/golang:1.12
     steps:
       - checkout
       - <<: *exports
@@ -117,7 +118,8 @@ jobs:
           path: build-manifests
   minikube_kafka:
     <<: *defaults
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - <<: *should_test
       - checkout
@@ -131,7 +133,7 @@ jobs:
   push_latest_images:
     <<: *defaults
     docker:
-      - image: circleci/golang:1.9 
+      - image: circleci/golang:1.12
     steps:
       - <<: *exports
       - setup_remote_docker
@@ -149,7 +151,7 @@ jobs:
   release:
     <<: *defaults
     docker:
-      - image: circleci/golang:1.9 
+      - image: circleci/golang:1.12
     steps:
       - <<: *exports
       - checkout
