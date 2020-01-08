@@ -42,6 +42,7 @@ local controllerAccount =
 
 local controllerDeployment =
   deployment.default("kafka-trigger-controller", controllerContainer, namespace) +
+  {apiVersion: "apps/v1"} +
   {metadata+:{labels: kubelessLabel}} +
   {spec+: {selector: {matchLabels: kubelessLabel}}} +
   {spec+: {template+: {spec+: {serviceAccountName: controllerAccount.metadata.name}}}} +
@@ -189,6 +190,9 @@ local zooVolumeCT = [
 local kafkaSts =
   statefulset.default("kafka", namespace) +
   statefulset.spec({serviceName: "broker"}) +
+  {apiVersion: "apps/v1"} +
+  {metadata+: {labels: kafkaLabel}} +
+  {spec+: {selector: {matchLabels: kafkaLabel}}} +
   {spec+: {template: {metadata: {labels: kafkaLabel}}}} +
   {spec+: {volumeClaimTemplates: kafkaVolumeCT}} +
   {spec+: {template+: {spec: {containers: [kafkaContainer], initContainers: [kafkaInitContainer]}}}};
@@ -196,6 +200,9 @@ local kafkaSts =
 local zookeeperSts =
   statefulset.default("zoo", namespace) +
   statefulset.spec({serviceName: "zoo"}) +
+  {apiVersion: "apps/v1"} +
+  {metadata+: {labels: zookeeperLabel}} +
+  {spec+: {selector: {matchLabels: zookeeperLabel}}} +
   {spec+: {template: {metadata: {labels: zookeeperLabel}}}} +
   {spec+: {volumeClaimTemplates: zooVolumeCT}} +
   {spec+: {template+: {spec: {containers: [zookeeperContainer], initContainers: [zookeeperInitContainer]}}}};
