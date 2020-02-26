@@ -21,8 +21,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	kafkaApi "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
 	"github.com/sirupsen/logrus"
@@ -311,4 +313,21 @@ func GetSecretsAsLocalObjectReference(secrets ...string) []v1.LocalObjectReferen
 		}
 	}
 	return res
+}
+
+// GetClusterDomain returns Kubernetes cluster domain, default to "cluster.local"
+func GetClusterDomain() string {
+	apiSvc := "kubernetes.default.svc."
+
+	clusterDomain := "cluster.local"
+
+	cname, err := net.LookupCNAME(apiSvc)
+	if err != nil {
+		return clusterDomain
+	}
+
+	clusterDomain = strings.TrimPrefix(cname, apiSvc)
+	clusterDomain = strings.TrimSuffix(clusterDomain, ".")
+
+	return clusterDomain
 }

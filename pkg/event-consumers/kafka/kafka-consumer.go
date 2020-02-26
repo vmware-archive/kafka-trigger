@@ -28,12 +28,13 @@ import (
 )
 
 var (
-	stopM     map[string](chan struct{})
-	stoppedM  map[string](chan struct{})
-	consumerM map[string]bool
-	brokers   string
-	logLevel  string
-	config    *cluster.Config
+	stopM         map[string](chan struct{})
+	stoppedM      map[string](chan struct{})
+	consumerM     map[string]bool
+	brokers       string
+	logLevel      string
+	config        *cluster.Config
+	clusterDomain string
 )
 
 func init() {
@@ -80,6 +81,9 @@ func init() {
 		}
 	}
 
+	// local utils
+	clusterDomain = utils.GetClusterDomain()
+
 }
 
 // createConsumerProcess gets messages to a Kafka topic from the broker and send the payload to function service
@@ -106,7 +110,7 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 				logrus.Debugf("Sending message %v to function %s", msg, funcName)
 				consumer.MarkOffset(msg, "")
 				go func() {
-					req, err := utils.GetHTTPReq(clientset, funcName, ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
+					req, err := utils.GetHTTPReq(clientset, funcName, ns, clusterDomain, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
 					if err != nil {
 						logrus.Errorf("Unable to elaborate request: %v", err)
 					} else {
