@@ -192,7 +192,7 @@ pubsub-ruby-verify:
 
 pubsub-go:
 	kubeless topic create s3-go || true
-	kubeless function deploy pubsub-go --runtime go1.10 --handler pubsub-go.Handler --from-file golang/hellowithdata.go
+	kubeless function deploy pubsub-go --runtime go1.14 --handler pubsub-go.Handler --from-file golang/hellowithdata.go
 	kubeless trigger kafka create pubsub-go --function-selector created-by=kubeless,function=pubsub-go --trigger-topic s3-go
 
 pubsub-go-verify:
