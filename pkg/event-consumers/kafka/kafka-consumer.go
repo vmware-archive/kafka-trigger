@@ -19,9 +19,10 @@ package kafka
 import (
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/Shopify/sarama"
-	"github.com/bsm/sarama-cluster"
+	cluster "github.com/bsm/sarama-cluster"
 	"github.com/kubeless/kafka-trigger/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -83,9 +84,9 @@ func init() {
 }
 
 // createConsumerProcess gets messages to a Kafka topic from the broker and send the payload to function service
-func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, clientset kubernetes.Interface, stopchan, stoppedchan chan struct{}) {
+func createConsumerProcess(brokers, topic, funcName, ns, consumerGroupID string, clientset kubernetes.Interface, stopchan, stoppedchan chan struct{}) {
 	// Init consumer
-	brokersSlice := []string{broker}
+	brokersSlice := strings.Split(brokers, ",")
 	topicsSlice := []string{topic}
 
 	consumer, err := cluster.NewConsumer(brokersSlice, consumerGroupID, topicsSlice, config)
@@ -94,7 +95,7 @@ func createConsumerProcess(broker, topic, funcName, ns, consumerGroupID string, 
 	}
 	defer consumer.Close()
 
-	logrus.Infof("Started Kakfa consumer Broker: %v, Topic: %v, Function: %v, consumerID: %v", broker, topic, funcName, consumerGroupID)
+	logrus.Infof("Started Kakfa consumer Brokers: %v, Topic: %v, Function: %v, consumerID: %v", brokers, topic, funcName, consumerGroupID)
 
 	// Consume messages, wait for signal to stopchan to exit
 	defer close(stoppedchan)
