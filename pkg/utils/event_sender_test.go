@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -40,7 +40,7 @@ func TestGetHTTPRequest(t *testing.T) {
 		},
 	}
 	clientset := fake.NewSimpleClientset(&svc)
-	req, err := GetHTTPReq(clientset, "foo", "myns", "kafkatriggers.kubeless.io", "POST", "my msg")
+	req, err := GetHTTPReq(clientset, "foo", "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", "my msg")
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
@@ -72,6 +72,9 @@ func TestGetHTTPRequest(t *testing.T) {
 	if req.Header.Get("event-namespace") != "kafkatriggers.kubeless.io" {
 		t.Errorf("Unexpected event-type %s", req.Header.Get("event-type"))
 	}
+	if req.Header.Get("event-topic") != "mytopic" {
+		t.Errorf("Unexpected event-topic %s", req.Header.Get("event-topic"))
+	}
 }
 
 func TestGetJSONHTTPRequest(t *testing.T) {
@@ -90,7 +93,7 @@ func TestGetJSONHTTPRequest(t *testing.T) {
 		},
 	}
 	clientset := fake.NewSimpleClientset(&svc)
-	req, err := GetHTTPReq(clientset, "foo", "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
+	req, err := GetHTTPReq(clientset, "foo", "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
@@ -99,6 +102,9 @@ func TestGetJSONHTTPRequest(t *testing.T) {
 	}
 	if req.Header.Get("event-type") != "application/json" {
 		t.Errorf("Unexpected event-type %s", req.Header.Get("event-type"))
+	}
+	if req.Header.Get("event-topic") != "mytopic" {
+		t.Errorf("Unexpected event-topic %s", req.Header.Get("event-topic"))
 	}
 }
 
