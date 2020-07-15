@@ -124,7 +124,7 @@ pubsub-python36-verify:
 
 pubsub-nodejs:
 	kubeless topic create s3-nodejs || true
-	kubeless function deploy pubsub-nodejs --runtime nodejs6 --handler pubsub-nodejs.handler --from-file nodejs/hellowithdata.js
+	kubeless function deploy pubsub-nodejs --runtime nodejs12 --handler pubsub-nodejs.handler --from-file nodejs/hellowithdata.js
 	kubeless trigger kafka create pubsub-nodejs --function-selector created-by=kubeless,function=pubsub-nodejs --trigger-topic s3-nodejs
 
 pubsub-nodejs-verify:

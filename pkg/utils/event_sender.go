@@ -46,7 +46,7 @@ func GetFunctionPort(clientset kubernetes.Interface, namespace, functionName str
 }
 
 // GetHTTPReq returns the http request object that can be used to send a event with payload to function service
-func GetHTTPReq(clientset kubernetes.Interface, funcName, namespace, eventNamespace, method, body string) (*http.Request, error) {
+func GetHTTPReq(clientset kubernetes.Interface, funcName, kafkaTopic, namespace, eventNamespace, method, body string) (*http.Request, error) {
 
 	funcPort, err := GetFunctionPort(clientset, namespace, funcName)
 	if err != nil {
@@ -65,6 +65,7 @@ func GetHTTPReq(clientset kubernetes.Interface, funcName, namespace, eventNamesp
 	req.Header.Add("event-id", eventID)
 	req.Header.Add("event-time", timestamp.String())
 	req.Header.Add("event-namespace", eventNamespace)
+	req.Header.Add("event-topic", kafkaTopic)
 	if IsJSON(body) {
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("event-type", "application/json")
