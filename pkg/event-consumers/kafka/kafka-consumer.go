@@ -45,6 +45,8 @@ func init() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
+	sarama.Logger = logrus.StandardLogger()
+
 	// Init config
 	// taking brokers from env var
 	brokers = os.Getenv("KAFKA_BROKERS")
