@@ -17,38 +17,32 @@ limitations under the License.
 package kafka
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/Shopify/sarama"
-	cluster "github.com/bsm/sarama-cluster"
 	"github.com/kubeless/kafka-trigger/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 )
 
 var (
-	stopM     map[string](chan struct{})
-	stoppedM  map[string](chan struct{})
+	stopM     map[string]chan struct{}
+	stoppedM  map[string]chan struct{}
 	consumerM map[string]bool
 	brokers   string
-	logLevel  string
-	config    *cluster.Config
+	config    *sarama.Config
 )
 
 func init() {
-	stopM = make(map[string](chan struct{}))
-	stoppedM = make(map[string](chan struct{}))
+	stopM = make(map[string]chan struct{})
+	stoppedM = make(map[string]chan struct{})
 	consumerM = make(map[string]bool)
 
-	//logrus initialization
-	// taking log level from env var
-	logLevel = os.Getenv("KUBELESS_LOG_LEVEL")
-	if logLevel == "DEBUG" {
+	if os.Getenv("KUBELESS_LOG_LEVEL") == "DEBUG" {
 		logrus.SetLevel(logrus.DebugLevel)
-	} else {
-		logrus.SetLevel(logrus.InfoLevel)
 	}
 
 	// Init config
@@ -57,11 +51,9 @@ func init() {
 	if brokers == "" {
 		brokers = "kafka.kubeless:9092"
 	}
-	config = cluster.NewConfig()
 
+	config = sarama.NewConfig()
 	config.Consumer.Return.Errors = true
-	config.Group.Return.Notifications = true
-	config.Consumer.Offsets.Initial = sarama.OffsetNewest
 
 	var err error
 
@@ -80,57 +72,39 @@ func init() {
 			logrus.Fatalf("Failed to set SASL configuration: %v", err)
 		}
 	}
-
 }
 
 // createConsumerProcess gets messages to a Kafka topic from the broker and send the payload to function service
-func createConsumerProcess(brokers, topic, funcName, ns, consumerGroupID string, clientset kubernetes.Interface, stopchan, stoppedchan chan struct{}) {
-	// Init consumer
-	brokersSlice := strings.Split(brokers, ",")
-	topicsSlice := []string{topic}
-
-	consumer, err := cluster.NewConsumer(brokersSlice, consumerGroupID, topicsSlice, config)
-	if err != nil {
-		logrus.Fatalf("Failed to start consumer: %v", err)
-	}
-	defer consumer.Close()
-
-	logrus.Infof("Started Kakfa consumer Brokers: %v, Topic: %v, Function: %v, consumerID: %v", brokers, topic, funcName, consumerGroupID)
-
-	// Consume messages, wait for signal to stopchan to exit
+func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientset kubernetes.Interface, stopchan, stoppedchan chan struct{}) {
 	defer close(stoppedchan)
+
+	group, err := sarama.NewConsumerGroup(strings.Split(brokers, ","), consumerGroupID, config)
+	if err != nil {
+		logrus.Fatalf("Failed to start Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+	}
+	defer func() {
+		if err := group.Close(); err != nil {
+			logrus.Errorf("Closing Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+		}
+	}()
+
+	logrus.Infof("Started Kafka consumer brokers = %v topic = %v function = %v consumerID = %v", brokers, topic, funcName, consumerGroupID)
+	ready := make(chan struct{})
+	consumer := NewConsumer(funcName, ns, clientset, ready)
+	errchan := group.Errors()
+
+	<-ready
 	for {
 		select {
-		case msg, more := <-consumer.Messages():
-			if more {
-				logrus.Debugf("Received Kafka message Partition: %d Offset: %d Key: %s Value: %s ", msg.Partition, msg.Offset, string(msg.Key), string(msg.Value))
-				logrus.Debugf("Sending message %v to function %s", msg, funcName)
-				consumer.MarkOffset(msg, "")
-				go func() {
-					req, err := utils.GetHTTPReq(clientset, funcName, topic, ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
-					if err != nil {
-						logrus.Errorf("Unable to elaborate request: %v", err)
-					} else {
-						//forward msg to function
-						err = utils.SendMessage(req)
-						if err != nil {
-							logrus.Errorf("Failed to send message to function: %v", err)
-						} else {
-							logrus.Infof("Message has sent to function %s successfully", funcName)
-						}
-					}
-				}()
-			}
-		case ntf, more := <-consumer.Notifications():
-			if more {
-				logrus.Infof("Rebalanced: %+v\n", ntf)
-			}
-		case err, more := <-consumer.Errors():
-			if more {
-				logrus.Errorf("Error: %s\n", err.Error())
-			}
 		case <-stopchan:
 			return
+		case err := <-errchan:
+			logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+		default:
+		}
+
+		if err := group.Consume(context.Background(), []string{topic}, consumer); err != nil {
+			logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
 		}
 	}
 }
@@ -138,35 +112,90 @@ func createConsumerProcess(brokers, topic, funcName, ns, consumerGroupID string,
 // CreateKafkaConsumer creates a goroutine that subscribes to Kafka topic
 func CreateKafkaConsumer(triggerObjName, funcName, ns, topic string, clientset kubernetes.Interface) error {
 	consumerID := generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic)
-	if !consumerM[consumerID] {
-		logrus.Infof("Creating Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
-		stopM[consumerID] = make(chan struct{})
-		stoppedM[consumerID] = make(chan struct{})
-		go createConsumerProcess(brokers, topic, funcName, ns, consumerID, clientset, stopM[consumerID], stoppedM[consumerID])
-		consumerM[consumerID] = true
-		logrus.Infof("Created Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
-	} else {
+	if consumerM[consumerID] {
 		logrus.Infof("Consumer for function %s associated with trigger %s already exists, so just returning", funcName, triggerObjName)
+		return nil
 	}
+
+	logrus.Infof("Creating Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+	stopM[consumerID] = make(chan struct{})
+	stoppedM[consumerID] = make(chan struct{})
+	go createConsumerProcess(topic, funcName, ns, consumerID, clientset, stopM[consumerID], stoppedM[consumerID])
+	consumerM[consumerID] = true
+	logrus.Infof("Created Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+
 	return nil
 }
 
 // DeleteKafkaConsumer deletes goroutine created by CreateKafkaConsumer
 func DeleteKafkaConsumer(triggerObjName, funcName, ns, topic string) error {
 	consumerID := generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic)
-	if consumerM[consumerID] {
-		logrus.Infof("Stopping consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
-		// delete consumer process
-		close(stopM[consumerID])
-		<-stoppedM[consumerID]
-		consumerM[consumerID] = false
-		logrus.Infof("Stopped consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
-	} else {
+	if !consumerM[consumerID] {
 		logrus.Infof("Consumer for function %s associated with trigger %s doesn't exists. Good enough to skip the stop", funcName, triggerObjName)
+		return nil
 	}
+
+	logrus.Infof("Stopping consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+	// delete consumer process
+	close(stopM[consumerID])
+	<-stoppedM[consumerID]
+	consumerM[consumerID] = false
+	logrus.Infof("Stopped consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+
 	return nil
 }
 
 func generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic string) string {
 	return ns + "_" + triggerObjName + "_" + funcName + "_" + topic
+}
+
+// Consumer represents a Sarama consumer group consumer.
+type Consumer struct {
+	funcName, ns string
+	clientset    kubernetes.Interface
+	ready        chan struct{}
+}
+
+// NewConsumer returns new consumer.
+func NewConsumer(funcName, ns string, clientset kubernetes.Interface, ready chan struct{}) *Consumer {
+	return &Consumer{
+		clientset: clientset,
+		funcName:  funcName,
+		ns:        ns,
+		ready:     ready,
+	}
+}
+
+// Setup is run at the beginning of a new session, before ConsumeClaim.
+func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
+	// Mark the consumer as ready
+	close(c.ready)
+	return nil
+}
+
+// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited.
+func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
+func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	for msg := range claim.Messages() {
+		logrus.Infof("Message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
+
+		req, err := utils.GetHTTPReq(c.clientset, c.funcName, msg.Topic, c.ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
+		if err != nil {
+			logrus.Errorf("Unable to elaborate request topic = %v function = %v: %v", msg.Topic, c.funcName, err)
+			continue
+		}
+
+		if err = utils.SendMessage(req); err != nil {
+			logrus.Errorf("Failed to send message topic = %v function = %v partition = %v offset = %v: %v", msg.Topic, c.funcName, msg.Partition, msg.Offset, err)
+		} else {
+			logrus.Infof("Message was sent to function successfully topic = %v function = %v partition = %v offset = %v", msg.Topic, c.funcName, msg.Partition, msg.Offset)
+		}
+
+		session.MarkMessage(msg, "")
+	}
+	return nil
 }
