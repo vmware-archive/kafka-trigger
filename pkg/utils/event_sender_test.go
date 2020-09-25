@@ -40,7 +40,7 @@ func TestGetHTTPRequest(t *testing.T) {
 		},
 	}
 	clientset := fake.NewSimpleClientset(&svc)
-	req, err := GetHTTPReq(clientset, "foo", "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", "my msg")
+	req, err := GetHTTPReq(clientset, "foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", "my msg")
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
@@ -93,7 +93,7 @@ func TestGetJSONHTTPRequest(t *testing.T) {
 		},
 	}
 	clientset := fake.NewSimpleClientset(&svc)
-	req, err := GetHTTPReq(clientset, "foo", "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
+	req, err := GetHTTPReq(clientset, "foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
