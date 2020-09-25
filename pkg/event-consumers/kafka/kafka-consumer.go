@@ -40,6 +40,7 @@ var (
 
 const clientID = "kubeless-kafka-trigger-controller"
 const defaultBrokers = "kafka.kubeless:9092"
+const kafkatriggersNamespace = "kafkatriggers.kubeless.io"
 
 func init() {
 	stopM = make(map[string]chan struct{})
@@ -86,22 +87,21 @@ func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientse
 
 	group, err := sarama.NewConsumerGroup(strings.Split(brokers, ","), consumerGroupID, config)
 	if err != nil {
-		logrus.Fatalf("Failed to start Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+		logrus.Fatalf("Create consumer group (brokers = %v topic = %v namespace = %v function = %v consumerID = %v): %v", brokers, topic, ns, funcName, consumerGroupID, err)
 	}
 	defer func() {
 		if err := group.Close(); err != nil {
-			logrus.Errorf("Closing Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+			logrus.Errorf("Close consumer group (brokers = %v topic = %v namespace = %v function = %v consumerID = %v): %v", brokers, topic, ns, funcName, consumerGroupID, err)
 		}
 	}()
 
-	logrus.Infof("Started Kafka consumer brokers = %v topic = %v function = %v consumerID = %v", brokers, topic, funcName, consumerGroupID)
 	ready := make(chan struct{})
 	consumer := NewConsumer(funcName, ns, clientset, ready)
 	errchan := group.Errors()
 
 	go func() {
 		for err := range errchan {
-			logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+			logrus.Errorf("Consumer group (brokers = %v topic = %v namespace = %v function = %v consumerID = %v): %v", brokers, topic, ns, funcName, consumerGroupID, err)
 		}
 	}()
 
@@ -113,9 +113,8 @@ func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientse
 	go func() {
 		defer wg.Done()
 		for {
-			logrus.Infof("Consuming function = %s namespace = %s groupID = %s", funcName, ns, consumerGroupID)
 			if err := group.Consume(ctx, []string{topic}, consumer); err != nil {
-				logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+				logrus.Errorf("Consumer group consuming (brokers = %v topic = %v namespace = %v function = %v consumerID = %v): %v", brokers, topic, ns, funcName, consumerGroupID, err)
 			}
 			if ctx.Err() != nil {
 				return
@@ -137,16 +136,15 @@ func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientse
 func CreateKafkaConsumer(triggerObjName, funcName, ns, topic string, clientset kubernetes.Interface) error {
 	consumerID := generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic)
 	if consumerM[consumerID] {
-		logrus.Infof("Consumer for function %s associated with trigger %s already exists, so just returning", funcName, triggerObjName)
+		logrus.Debugf("Creating consumer (namespace = %v function = %v trigger = %v topic = %v): already exists, skipping", ns, funcName, triggerObjName, topic)
 		return nil
 	}
 
-	logrus.Infof("Creating Kafka consumer for the function %s associated with trigger %s", funcName, triggerObjName)
+	logrus.Debugf("Creating consumer (namespace = %v function = %v trigger = %v topic = %v)", ns, funcName, triggerObjName, topic)
 	stopM[consumerID] = make(chan struct{})
 	stoppedM[consumerID] = make(chan struct{})
 	go createConsumerProcess(topic, funcName, ns, consumerID, clientset, stopM[consumerID], stoppedM[consumerID])
 	consumerM[consumerID] = true
-	logrus.Infof("Created Kafka consumer for the function %s associated with trigger %s", funcName, triggerObjName)
 
 	return nil
 }
@@ -155,16 +153,15 @@ func CreateKafkaConsumer(triggerObjName, funcName, ns, topic string, clientset k
 func DeleteKafkaConsumer(triggerObjName, funcName, ns, topic string) error {
 	consumerID := generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic)
 	if !consumerM[consumerID] {
-		logrus.Infof("Consumer for function %s associated with trigger %s doesn't exists. Good enough to skip the stop", funcName, triggerObjName)
+		logrus.Debugf("Stopping consumer (namespace = %v function = %v trigger = %v topic = %v): does not exist, skipping", ns, funcName, triggerObjName, topic)
 		return nil
 	}
 
-	logrus.Infof("Stopping consumer for the function %s associated with trigger %s", funcName, triggerObjName)
-	// delete consumer process
+	logrus.Debugf("Stopping consumer (namespace = %v function = %v trigger = %v topic = %v)", ns, funcName, triggerObjName, topic)
 	close(stopM[consumerID])
 	<-stoppedM[consumerID]
 	consumerM[consumerID] = false
-	logrus.Infof("Stopped consumer for the function %s associated with trigger %s", funcName, triggerObjName)
+	logrus.Debugf("Stopped consumer (namespace = %v function = %v trigger = %v topic = %v)", ns, funcName, triggerObjName, topic)
 
 	return nil
 }
@@ -197,33 +194,29 @@ func (c *Consumer) Reset() {
 
 // Setup is run at the beginning of a new session, before ConsumeClaim.
 func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
-	logrus.Infof("Setting up Kafka consumer function = %s namespace = %s", c.funcName, c.ns)
-	// Mark the consumer as ready
+	// Mark the consumer as ready.
 	close(c.ready)
 	return nil
 }
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited.
 func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
-	logrus.Infof("Cleaning up Kafka consumer function = %s namespace = %s", c.funcName, c.ns)
 	return nil
 }
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		logrus.Infof("Message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
-
-		req, err := utils.GetHTTPReq(c.clientset, c.funcName, msg.Topic, c.ns, "kafkatriggers.kubeless.io", "POST", string(msg.Value))
+		req, err := utils.GetHTTPReq(c.clientset, c.funcName, msg.Topic, c.ns, kafkatriggersNamespace, "POST", string(msg.Value))
 		if err != nil {
-			logrus.Errorf("Unable to elaborate request topic = %v function = %v: %v", msg.Topic, c.funcName, err)
+			logrus.Errorf("Unable to elaborate request (namespace = %v function = %v topic = %v partition = %v offset = %v): %v", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset, err)
 			continue
 		}
 
 		if err = utils.SendMessage(req); err != nil {
-			logrus.Errorf("Failed to send message topic = %v function = %v partition = %v offset = %v: %v", msg.Topic, c.funcName, msg.Partition, msg.Offset, err)
+			logrus.Errorf("Failed to send message (namespace = %v function = %v topic = %v partition = %v offset = %v): %v", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset, err)
 		} else {
-			logrus.Infof("Message was sent to function successfully topic = %v function = %v partition = %v offset = %v", msg.Topic, c.funcName, msg.Partition, msg.Offset)
+			logrus.Infof("Message was sent to function successfully (namespace = %v function = %v topic = %v partition = %v offset = %v)", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset)
 		}
 
 		session.MarkMessage(msg, "")
