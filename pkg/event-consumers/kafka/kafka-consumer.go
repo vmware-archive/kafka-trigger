@@ -119,12 +119,12 @@ func CreateKafkaConsumer(triggerObjName, funcName, ns, topic string, clientset k
 		return nil
 	}
 
-	logrus.Infof("Creating Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+	logrus.Infof("Creating Kafka consumer for the function %s associated with trigger %s", funcName, triggerObjName)
 	stopM[consumerID] = make(chan struct{})
 	stoppedM[consumerID] = make(chan struct{})
 	go createConsumerProcess(topic, funcName, ns, consumerID, clientset, stopM[consumerID], stoppedM[consumerID])
 	consumerM[consumerID] = true
-	logrus.Infof("Created Kafka consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+	logrus.Infof("Created Kafka consumer for the function %s associated with trigger %s", funcName, triggerObjName)
 
 	return nil
 }
@@ -137,12 +137,12 @@ func DeleteKafkaConsumer(triggerObjName, funcName, ns, topic string) error {
 		return nil
 	}
 
-	logrus.Infof("Stopping consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+	logrus.Infof("Stopping consumer for the function %s associated with trigger %s", funcName, triggerObjName)
 	// delete consumer process
 	close(stopM[consumerID])
 	<-stoppedM[consumerID]
 	consumerM[consumerID] = false
-	logrus.Infof("Stopped consumer for the function %s associated with for trigger %s", funcName, triggerObjName)
+	logrus.Infof("Stopped consumer for the function %s associated with trigger %s", funcName, triggerObjName)
 
 	return nil
 }
