@@ -78,7 +78,7 @@ s3-python-kafka-trigger:
 
 pubsub-python37:
 	kubeless topic create s3-python37 || true
-	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/hellowithdata.py
+	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/hellowithdata37.py
 	kubeless trigger kafka create pubsub-python37 --function-selector created-by=kubeless,function=pubsub-python37 --trigger-topic s3-python37
 
 pubsub-python37-verify:
