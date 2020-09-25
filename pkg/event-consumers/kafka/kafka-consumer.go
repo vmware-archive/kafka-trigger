@@ -36,6 +36,8 @@ var (
 	config    *sarama.Config
 )
 
+const defaultBrokers = "kafka.kubeless:9092"
+
 func init() {
 	stopM = make(map[string]chan struct{})
 	stoppedM = make(map[string]chan struct{})
@@ -47,15 +49,14 @@ func init() {
 
 	sarama.Logger = logrus.StandardLogger()
 
-	// Init config
-	// taking brokers from env var
 	brokers = os.Getenv("KAFKA_BROKERS")
 	if brokers == "" {
-		brokers = "kafka.kubeless:9092"
+		brokers = defaultBrokers
 	}
 
 	config = sarama.NewConfig()
 	config.Consumer.Return.Errors = true
+	config.Version = sarama.V0_10_2_0 // Min supported version for consumer groups.
 
 	var err error
 
@@ -68,7 +69,6 @@ func init() {
 	}
 	if enableSASL, _ := strconv.ParseBool(os.Getenv("KAFKA_ENABLE_SASL")); enableSASL {
 		config.Net.SASL.Enable = true
-		config.Version = sarama.V0_10_0_0
 		config.Net.SASL.User, config.Net.SASL.Password, err = GetSASLConfiguration(os.Getenv("KAFKA_USERNAME"), os.Getenv("KAFKA_PASSWORD"))
 		if err != nil {
 			logrus.Fatalf("Failed to set SASL configuration: %v", err)
