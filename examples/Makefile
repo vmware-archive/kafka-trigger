@@ -76,32 +76,9 @@ kafka-python-func2-topic-s3-python-verify:
 s3-python-kafka-trigger:
 	kubeless trigger kafka create s3-python-kafka-trigger --function-selector created-by=kubeless,topic=s3-python --trigger-topic s3-python
 
-pubsub-python36:
-	kubeless topic create s3-python36 || true
-	kubeless function deploy pubsub-python36 --runtime python3.6 --handler pubsub-python.handler --from-file python/pubsub.py
-	kubeless trigger kafka create pubsub-python36 --function-selector created-by=kubeless,function=pubsub-python36 --trigger-topic s3-python36
-
-pubsub-python36-verify:
-	$(eval DATA := $(shell mktemp -u -t XXXXXXXX))
-	kubeless topic publish --topic s3-python36 --data '{"payload":"$(DATA)"}'
-	number="1"; \
-	timeout="60"; \
-	found=false; \
-	while [ $$number -le $$timeout ] ; do \
-		pod=`kubectl get po -oname -l function=pubsub-python36`; \
-		logs=`kubectl logs $$pod | grep $(DATA)`; \
-    	if [ "$$logs" != "" ]; then \
-			found=true; \
-			break; \
-		fi; \
-		sleep 1; \
-		number=`expr $$number + 1`; \
-	done; \
-	$$found
-
 pubsub-python37:
 	kubeless topic create s3-python37 || true
-	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/pubsub.py
+	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/hellowithdata.py
 	kubeless trigger kafka create pubsub-python37 --function-selector created-by=kubeless,function=pubsub-python37 --trigger-topic s3-python37
 
 pubsub-python37-verify:
