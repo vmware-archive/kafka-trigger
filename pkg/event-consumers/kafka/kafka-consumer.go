@@ -224,7 +224,7 @@ func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 		if err = utils.SendMessage(req); err != nil {
 			logrus.Errorf("Failed to send message (namespace = %v function = %v topic = %v partition = %v offset = %v): %v", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset, err)
 		} else {
-			logrus.Infof("Message was sent to function successfully (namespace = %v function = %v topic = %v partition = %v offset = %v)", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset)
+			logrus.Infof("Message sent successfully (namespace = %v function = %v topic = %v partition = %v offset = %v)", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset)
 		}
 
 		session.MarkMessage(msg, "")
