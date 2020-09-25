@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -37,23 +36,17 @@ func IsJSON(s string) bool {
 }
 
 // GetFunctionPort returns the port for a function service
-func GetFunctionPort(clientset kubernetes.Interface, namespace, functionName string) (string, error) {
+func GetFunctionPort(clientset kubernetes.Interface, namespace, functionName string) (int, error) {
 	svc, err := clientset.CoreV1().Services(namespace).Get(functionName, metav1.GetOptions{})
 	if err != nil {
-		return "", fmt.Errorf("Unable to find the service for function %s", functionName)
+		return 0, fmt.Errorf("Unable to find the service for function %s", functionName)
 	}
-	return strconv.Itoa(int(svc.Spec.Ports[0].Port)), nil
+	return int(svc.Spec.Ports[0].Port), nil
 }
 
 // GetHTTPReq returns the http request object that can be used to send a event with payload to function service
-func GetHTTPReq(clientset kubernetes.Interface, funcName, kafkaTopic, namespace, eventNamespace, method, body string) (*http.Request, error) {
-
-	funcPort, err := GetFunctionPort(clientset, namespace, funcName)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(method, fmt.Sprintf("http://%s.%s.svc.cluster.local:%s", funcName, namespace, funcPort), strings.NewReader(body))
+func GetHTTPReq(clientset kubernetes.Interface, funcName string, funcPort int, kafkaTopic, namespace, eventNamespace, method, body string) (*http.Request, error) {
+	req, err := http.NewRequest(method, fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", funcName, namespace, funcPort), strings.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request %v", err)
 	}

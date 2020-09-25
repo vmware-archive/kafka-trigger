@@ -95,8 +95,13 @@ func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientse
 		}
 	}()
 
+	funcPort, err := utils.GetFunctionPort(clientset, ns, funcName)
+	if err != nil {
+		logrus.Fatalf("Cannot get function port (namespace = %v function = %v): %v", ns, funcName, err)
+	}
+
 	ready := make(chan struct{})
-	consumer := NewConsumer(funcName, ns, clientset, ready)
+	consumer := NewConsumer(funcName, funcPort, ns, clientset, ready)
 	errchan := group.Errors()
 
 	go func() {
@@ -172,16 +177,19 @@ func generateUniqueConsumerGroupID(triggerObjName, funcName, ns, topic string) s
 
 // Consumer represents a Sarama consumer group consumer.
 type Consumer struct {
-	funcName, ns string
-	clientset    kubernetes.Interface
-	ready        chan struct{}
+	funcName  string
+	funcPort  int
+	ns        string
+	clientset kubernetes.Interface
+	ready     chan struct{}
 }
 
 // NewConsumer returns new consumer.
-func NewConsumer(funcName, ns string, clientset kubernetes.Interface, ready chan struct{}) *Consumer {
+func NewConsumer(funcName string, funcPort int, ns string, clientset kubernetes.Interface, ready chan struct{}) *Consumer {
 	return &Consumer{
 		clientset: clientset,
 		funcName:  funcName,
+		funcPort:  funcPort,
 		ns:        ns,
 		ready:     ready,
 	}
@@ -207,7 +215,7 @@ func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		req, err := utils.GetHTTPReq(c.clientset, c.funcName, msg.Topic, c.ns, kafkatriggersNamespace, "POST", string(msg.Value))
+		req, err := utils.GetHTTPReq(c.clientset, c.funcName, c.funcPort, msg.Topic, c.ns, kafkatriggersNamespace, "POST", string(msg.Value))
 		if err != nil {
 			logrus.Errorf("Unable to elaborate request (namespace = %v function = %v topic = %v partition = %v offset = %v): %v", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset, err)
 			continue
