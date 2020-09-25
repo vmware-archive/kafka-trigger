@@ -18,29 +18,10 @@ package utils
 import (
 	"io/ioutil"
 	"testing"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestGetHTTPRequest(t *testing.T) {
-	myNsFoo := metav1.ObjectMeta{
-		Namespace: "myns",
-		Name:      "foo",
-	}
-	svc := v1.Service{
-		ObjectMeta: myNsFoo,
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				{
-					Port: 1234,
-				},
-			},
-		},
-	}
-	clientset := fake.NewSimpleClientset(&svc)
-	req, err := GetHTTPReq(clientset, "foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", "my msg")
+	req, err := GetHTTPReq("foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", "my msg")
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
@@ -78,22 +59,7 @@ func TestGetHTTPRequest(t *testing.T) {
 }
 
 func TestGetJSONHTTPRequest(t *testing.T) {
-	myNsFoo := metav1.ObjectMeta{
-		Namespace: "myns",
-		Name:      "foo",
-	}
-	svc := v1.Service{
-		ObjectMeta: myNsFoo,
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				{
-					Port: 1234,
-				},
-			},
-		},
-	}
-	clientset := fake.NewSimpleClientset(&svc)
-	req, err := GetHTTPReq(clientset, "foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
+	req, err := GetHTTPReq("foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}

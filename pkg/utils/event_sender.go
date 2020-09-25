@@ -23,9 +23,10 @@ import (
 	"strings"
 	"time"
 
-	kubelessutil "github.com/kubeless/kubeless/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	kubelessutil "github.com/kubeless/kubeless/pkg/utils"
 )
 
 // IsJSON returns true if the string is json
@@ -45,7 +46,7 @@ func GetFunctionPort(clientset kubernetes.Interface, namespace, functionName str
 }
 
 // GetHTTPReq returns the http request object that can be used to send a event with payload to function service
-func GetHTTPReq(clientset kubernetes.Interface, funcName string, funcPort int, kafkaTopic, namespace, eventNamespace, method, body string) (*http.Request, error) {
+func GetHTTPReq(funcName string, funcPort int, kafkaTopic, namespace, eventNamespace, method, body string) (*http.Request, error) {
 	req, err := http.NewRequest(method, fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", funcName, namespace, funcPort), strings.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request %v", err)
