@@ -108,6 +108,7 @@ func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientse
 		default:
 		}
 
+		logrus.Infof("Consuming function = %s namespace = %s groupID = %s", funcName, ns, consumerGroupID)
 		if err := group.Consume(context.Background(), []string{topic}, consumer); err != nil {
 			logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
 		}
@@ -173,6 +174,7 @@ func NewConsumer(funcName, ns string, clientset kubernetes.Interface, ready chan
 
 // Setup is run at the beginning of a new session, before ConsumeClaim.
 func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
+	logrus.Infof("Setting up Kafka consumer function = %s namespace %s", c.funcName, c.ns)
 	// Mark the consumer as ready
 	close(c.ready)
 	return nil
@@ -180,6 +182,7 @@ func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited.
 func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
+	logrus.Infof("Cleaning up Kafka consumer function = %s namespace %s", c.funcName, c.ns)
 	return nil
 }
 
