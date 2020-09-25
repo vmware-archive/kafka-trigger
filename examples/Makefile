@@ -76,29 +76,6 @@ kafka-python-func2-topic-s3-python-verify:
 s3-python-kafka-trigger:
 	kubeless trigger kafka create s3-python-kafka-trigger --function-selector created-by=kubeless,topic=s3-python --trigger-topic s3-python
 
-pubsub-python34:
-	kubeless topic create s3-python34 || true
-	kubeless function deploy pubsub-python34 --runtime python3.4 --handler pubsub-python.handler --from-file python/hellowithdata34.py
-	kubeless trigger kafka create pubsub-python34 --function-selector created-by=kubeless,function=pubsub-python34 --trigger-topic s3-python34
-
-pubsub-python34-verify:
-	$(eval DATA := $(shell mktemp -u -t XXXXXXXX))
-	kubeless topic publish --topic s3-python34 --data '{"payload":"$(DATA)"}'
-	number="1"; \
-	timeout="60"; \
-	found=false; \
-	while [ $$number -le $$timeout ] ; do \
-		pod=`kubectl get po -oname -l function=pubsub-python34`; \
-		logs=`kubectl logs $$pod | grep $(DATA)`; \
-    	if [ "$$logs" != "" ]; then \
-			found=true; \
-			break; \
-		fi; \
-		sleep 1; \
-		number=`expr $$number + 1`; \
-	done; \
-	$$found
-
 pubsub-python36:
 	kubeless topic create s3-python36 || true
 	kubeless function deploy pubsub-python36 --runtime python3.6 --handler pubsub-python.handler --from-file python/pubsub.py
@@ -112,6 +89,29 @@ pubsub-python36-verify:
 	found=false; \
 	while [ $$number -le $$timeout ] ; do \
 		pod=`kubectl get po -oname -l function=pubsub-python36`; \
+		logs=`kubectl logs $$pod | grep $(DATA)`; \
+    	if [ "$$logs" != "" ]; then \
+			found=true; \
+			break; \
+		fi; \
+		sleep 1; \
+		number=`expr $$number + 1`; \
+	done; \
+	$$found
+
+pubsub-python37:
+	kubeless topic create s3-python37 || true
+	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/pubsub.py
+	kubeless trigger kafka create pubsub-python37 --function-selector created-by=kubeless,function=pubsub-python37 --trigger-topic s3-python37
+
+pubsub-python37-verify:
+	$(eval DATA := $(shell mktemp -u -t XXXXXXXX))
+	kubeless topic publish --topic s3-python37 --data '{"payload":"$(DATA)"}'
+	number="1"; \
+	timeout="60"; \
+	found=false; \
+	while [ $$number -le $$timeout ] ; do \
+		pod=`kubectl get po -oname -l function=pubsub-python37`; \
 		logs=`kubectl logs $$pod | grep $(DATA)`; \
     	if [ "$$logs" != "" ]; then \
 			found=true; \
