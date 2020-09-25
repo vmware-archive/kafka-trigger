@@ -23,9 +23,10 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
-	"github.com/kubeless/kafka-trigger/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/kubeless/kafka-trigger/pkg/utils"
 )
 
 var (
@@ -36,6 +37,7 @@ var (
 	config    *sarama.Config
 )
 
+const clientID = "kubeless-kafka-trigger-controller"
 const defaultBrokers = "kafka.kubeless:9092"
 
 func init() {
@@ -55,8 +57,9 @@ func init() {
 	}
 
 	config = sarama.NewConfig()
-	config.Consumer.Return.Errors = true
+	config.ClientID = clientID
 	config.Version = sarama.V0_10_2_0 // Min supported version for consumer groups.
+	config.Consumer.Return.Errors = true
 
 	var err error
 
