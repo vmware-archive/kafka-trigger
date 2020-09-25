@@ -197,7 +197,7 @@ func (c *Consumer) Reset() {
 
 // Setup is run at the beginning of a new session, before ConsumeClaim.
 func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
-	logrus.Infof("Setting up Kafka consumer function = %s namespace %s", c.funcName, c.ns)
+	logrus.Infof("Setting up Kafka consumer function = %s namespace = %s", c.funcName, c.ns)
 	// Mark the consumer as ready
 	close(c.ready)
 	return nil
@@ -205,7 +205,7 @@ func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited.
 func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
-	logrus.Infof("Cleaning up Kafka consumer function = %s namespace %s", c.funcName, c.ns)
+	logrus.Infof("Cleaning up Kafka consumer function = %s namespace = %s", c.funcName, c.ns)
 	return nil
 }
 
