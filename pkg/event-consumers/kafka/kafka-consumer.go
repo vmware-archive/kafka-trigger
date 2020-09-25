@@ -21,6 +21,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
@@ -98,21 +99,38 @@ func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientse
 	consumer := NewConsumer(funcName, ns, clientset, ready)
 	errchan := group.Errors()
 
-	<-ready
-	for {
-		select {
-		case <-stopchan:
-			return
-		case err := <-errchan:
+	go func() {
+		for err := range errchan {
 			logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
-		default:
 		}
+	}()
 
-		logrus.Infof("Consuming function = %s namespace = %s groupID = %s", funcName, ns, consumerGroupID)
-		if err := group.Consume(context.Background(), []string{topic}, consumer); err != nil {
-			logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			logrus.Infof("Consuming function = %s namespace = %s groupID = %s", funcName, ns, consumerGroupID)
+			if err := group.Consume(ctx, []string{topic}, consumer); err != nil {
+				logrus.Errorf("Kafka consumer brokers = %v topic = %v function = %v consumerID = %v: %v", brokers, topic, funcName, consumerGroupID, err)
+			}
+			if ctx.Err() != nil {
+				return
+			}
+			consumer.Reset()
 		}
+	}()
+
+	select {
+	case <-ready:
+	case <-stopchan:
+		cancel()
 	}
+
+	wg.Wait()
 }
 
 // CreateKafkaConsumer creates a goroutine that subscribes to Kafka topic
@@ -170,6 +188,11 @@ func NewConsumer(funcName, ns string, clientset kubernetes.Interface, ready chan
 		ns:        ns,
 		ready:     ready,
 	}
+}
+
+// Reset resets the consumer for new session.
+func (c *Consumer) Reset() {
+	c.ready = make(chan struct{})
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim.
