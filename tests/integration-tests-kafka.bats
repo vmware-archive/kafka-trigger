@@ -26,10 +26,10 @@ load ../script/libtest
   verify_function pubsub-python
   kubeless_function_delete pubsub-python
 }
-@test "Test function: pubsub-python34" {
-  deploy_function pubsub-python34
-  verify_function pubsub-python34
-  kubeless_function_delete pubsub-python34
+@test "Test function: pubsub-python37" {
+  deploy_function pubsub-python37
+  verify_function pubsub-python37
+  kubeless_function_delete pubsub-python37
 }
 @test "Test 1:n association between Kafka trigger and functions" {
   deploy_function kafka-python-func1-topic-s3-python
