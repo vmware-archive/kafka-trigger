@@ -6,9 +6,7 @@ build_allways: &build_allways
     tags:
       only: /.*/
 defaults: &defaults
-  working_directory: /home/circleci/.go_workspace/src/github.com/kubeless/kafka-trigger
   environment:
-    GOPATH: /home/circleci/.go_workspace
     KAFKA_CONTROLLER_IMAGE_NAME: kubeless/kafka-trigger-controller
     CGO_ENABLED: "0"
     TEST_DEBUG: "1"
@@ -27,7 +25,7 @@ restore_workspace: &restore_workspace
   run: |
     make bootstrap
     sudo cp -r /tmp/go/bin/* /usr/local/bin/
-    cp -r /tmp/go/src/github.com/kubeless/kafka-trigger/build-manifests/*yaml .
+    cp -r /tmp/go/*yaml .
 should_test: &should_test
   run: |
     case $CIRCLE_JOB in
@@ -77,12 +75,14 @@ jobs:
   build:
     <<: *defaults
     docker:
-      - image: circleci/golang:1.14
+      - image: circleci/golang:1.15
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
       - <<: *exports
-      # go build creates files under /usr/local/go where the running user doesn't have permissions to write
-      - run: sudo chown -R circleci:circleci /usr/local/go/
+      - run: go mod download
       - run: make bootstrap
       - run: mkdir build-manifests
       # Install kubeless required files
@@ -105,18 +105,22 @@ jobs:
             cp ${f}.yaml build-manifests/
           done
       - persist_to_workspace:
-          root: /home/circleci/.go_workspace
+          root: /go
           paths:
-            - bin
-            - src/github.com/kubeless/kafka-trigger/build-manifests/*yaml
+            - ./bin
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - ./build-manifests/*yaml
       - store_artifacts:
-          path: /home/circleci/.go_workspace/bin/kubeless
+          path: /go/bin/kubeless
+          destination: ./bin/kubeless
       - store_artifacts:
-          path: build-manifests
+          path: ./build-manifests/
   minikube_kafka:
     <<: *defaults
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     steps:
       - <<: *should_test
       - checkout
@@ -130,7 +134,7 @@ jobs:
   push_latest_images:
     <<: *defaults
     docker:
-      - image: circleci/golang:1.14
+      - image: circleci/golang:1.15
     steps:
       - <<: *exports
       - setup_remote_docker
@@ -148,7 +152,7 @@ jobs:
   release:
     <<: *defaults
     docker:
-      - image: circleci/golang:1.14
+      - image: circleci/golang:1.15
     steps:
       - <<: *exports
       - checkout
