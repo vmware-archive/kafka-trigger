@@ -76,12 +76,12 @@ kafka-python-func2-topic-s3-python-verify:
 s3-python-kafka-trigger:
 	kubeless trigger kafka create s3-python-kafka-trigger --function-selector created-by=kubeless,topic=s3-python --trigger-topic s3-python
 
-pubsub-python37:
+pubsub-python:
 	kubeless topic create s3-python37 || true
 	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/hellowithdata.py
 	kubeless trigger kafka create pubsub-python37 --function-selector created-by=kubeless,function=pubsub-python37 --trigger-topic s3-python37
 
-pubsub-python37-verify:
+pubsub-python-verify:
 	$(eval DATA := $(shell mktemp -u -t XXXXXXXX))
 	kubeless topic publish --topic s3-python37 --data '{"payload":"$(DATA)"}'
 	number="1"; \
