@@ -31,7 +31,7 @@ pubsub-python-verify:
 
 kafka-python-func1-topic-s3-python:
 	kubeless topic create s3-python || true
-	kubeless function deploy kafka-python-func1-topic-s3-python --runtime python2.7 --handler pubsub.handler --from-file python/hellowithdata.py --label topic=s3-python
+	kubeless function deploy kafka-python-func1-topic-s3-python --runtime python3.7 --handler pubsub.handler --from-file python/hellowithdata.py --label topic=s3-python
 
 kafka-python-func1-topic-s3-python-verify:
 	$(eval DATA := $(shell mktemp -u -t XXXXXXXX))
@@ -53,7 +53,7 @@ kafka-python-func1-topic-s3-python-verify:
 
 kafka-python-func2-topic-s3-python:
 	kubeless topic create s3-python || true
-	kubeless function deploy kafka-python-func2-topic-s3-python --runtime python2.7 --handler pubsub.handler --from-file python/hellowithdata.py --label topic=s3-python
+	kubeless function deploy kafka-python-func2-topic-s3-python --runtime python3.7 --handler pubsub.handler --from-file python/hellowithdata.py --label topic=s3-python
 
 kafka-python-func2-topic-s3-python-verify:
 	$(eval DATA := $(shell mktemp -u -t XXXXXXXX))
@@ -78,7 +78,7 @@ s3-python-kafka-trigger:
 
 pubsub-python37:
 	kubeless topic create s3-python37 || true
-	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/hellowithdata37.py
+	kubeless function deploy pubsub-python37 --runtime python3.7 --handler pubsub-python.handler --from-file python/hellowithdata.py
 	kubeless trigger kafka create pubsub-python37 --function-selector created-by=kubeless,function=pubsub-python37 --trigger-topic s3-python37
 
 pubsub-python37-verify:
