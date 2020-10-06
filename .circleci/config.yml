@@ -133,7 +133,7 @@ jobs:
       - attach_workspace:
           at: /tmp/go
       - <<: *restore_workspace
-      - run: sudp apt-get update && sudo apt-get install -y conntrack
+      - run: sudo apt-get update && sudo apt-get install -y conntrack
       - run: ./script/pull-or-build-image.sh kafka-controller-image
       - run: ./script/integration-tests minikube deployment
       - run: ./script/integration-tests minikube kafka
