@@ -10,6 +10,7 @@ require (
 	github.com/coreos/prometheus-operator v0.0.0-20171201110357-197eb012d973
 	github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633 // indirect
 	github.com/emicklei/go-restful-swagger12 v0.0.0-20170208215640-dcef7f557305 // indirect
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680 // indirect
 	github.com/go-openapi/jsonpointer v0.0.0-20160704185906-46af16f9f7b1 // indirect
 	github.com/go-openapi/jsonreference v0.0.0-20160704190145-13c6e3589ad9 // indirect
@@ -18,12 +19,14 @@ require (
 	github.com/gogo/protobuf v0.0.0-20170330071051-c0656edd0d9e // indirect
 	github.com/golang/glog v0.0.0-20141105023935-44145f04b68c
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
+	github.com/golang/protobuf v1.0.0 // indirect
 	github.com/google/btree v0.0.0-20160524151835-7d79101e329e // indirect
 	github.com/google/gofuzz v0.0.0-20161122191042-44d81051d367 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/gregjones/httpcache v0.0.0-20170728041850-787624de3eb7 // indirect
 	github.com/hashicorp/golang-lru v0.0.0-20160207214719-a0d98a5f2880 // indirect
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
+	github.com/hpcloud/tail v1.0.0 // indirect
 	github.com/imdario/mergo v0.0.0-20141206190957-6633656539c1
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v0.0.0-20170829155851-36b14963da70 // indirect
@@ -31,8 +34,8 @@ require (
 	github.com/kubeless/kubeless v1.0.0
 	github.com/mailru/easyjson v0.0.0-20160728113105-d5b7844b561a // indirect
 	github.com/matttproud/golang_protobuf_extensions v0.0.0-20150406173934-fc2b8d3a73c4 // indirect
-	github.com/onsi/ginkgo v1.14.1 // indirect
-	github.com/onsi/gomega v1.10.2 // indirect
+	github.com/onsi/ginkgo v1.11.0 // indirect
+	github.com/onsi/gomega v1.4.1 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.0.0-20180311214515-816c9085562c // indirect
 	github.com/prometheus/client_model v0.0.0-20150212101744-fa8ad6fec335 // indirect
@@ -41,11 +44,16 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.1 // indirect
 	golang.org/x/oauth2 v0.0.0-20170412232759-a6bd8cefa181 // indirect
+	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
 	google.golang.org/appengine v1.1.0 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
+	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/inf.v0 v0.9.0 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	k8s.io/api v0.0.0-20180103175015-389dfa299845
 	k8s.io/apiextensions-apiserver v0.0.0-20180103181712-d0becfa6529e
 	k8s.io/apimachinery v0.0.0-20180103174757-bc110fd540ab
