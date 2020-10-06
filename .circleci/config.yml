@@ -124,12 +124,12 @@ jobs:
     parameters:
       k8s-version:
         type: string
-    environment:
-      MINIKUBE_KUBERNETES_VERSION: << parameters.k8s-version >>
     steps:
       - <<: *should_test
       - checkout
       - <<: *exports
+      - run: |
+        echo "export MINIKUBE_KUBERNETES_VERSION=<< parameters.k8s-version >>" >> $BASH_ENV
       - attach_workspace:
           at: /tmp/go
       - <<: *restore_workspace
