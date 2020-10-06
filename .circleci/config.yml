@@ -32,7 +32,7 @@ should_test: &should_test
     # In kase of minikube+kafka we want to test it if
     # it is a Pull Request related to Kafka (discovered from the PR title)
     # or if the build is from the "master" branch
-    minikube_kafka)
+    minikube_kafka*)
       if [[ -n "$CIRCLE_PULL_REQUESTS" ]]; then
         pr_kafka_title=$(curl -H "Authorization: token $ACCESS_TOKEN" "https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/${CIRCLE_PR_NUMBER}" | grep title || true)
       fi
@@ -131,7 +131,6 @@ jobs:
       - attach_workspace:
           at: /tmp/go
       - <<: *restore_workspace
-      - run: "env | sort"
       - run: ./script/pull-or-build-image.sh kafka-controller-image
       - run: ./script/integration-tests minikube deployment
       - run: ./script/integration-tests minikube kafka
