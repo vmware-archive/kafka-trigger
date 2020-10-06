@@ -58,6 +58,9 @@ workflows:
           <<: *build_allways
           requires:
             - build
+          matrix:
+            parameters:
+              k8s-version: ["v1.14.9", "v1.15.11", "v1.16.13", "v1.17.9", "v1.18.9"]
       - push_latest_images:
           filters:
             branches:
