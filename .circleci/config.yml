@@ -124,15 +124,12 @@ jobs:
     <<: *defaults
     machine:
       image: ubuntu-1604:202007-01
-    parameters:
-      k8s-version:
-        type: string
     steps:
       - <<: *should_test
       - checkout
       - <<: *exports
       - environment:
-          MINIKUBE_KUBERNETES_VERSION: << parameters.k8s-version >>
+          MINIKUBE_KUBERNETES_VERSION: v1.14.9
       - attach_workspace:
           at: /tmp/go
       - <<: *restore_workspace
