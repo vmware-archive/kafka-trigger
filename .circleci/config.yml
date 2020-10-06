@@ -101,12 +101,7 @@ jobs:
       - run: make test
       - run: make validation
       - run: make all-yaml
-      - run: |
-          IFS=' ' read -r -a manifests <<< "$MANIFESTS"
-          for f in "${manifests[@]}"; do
-            sed -E -i.bak 's/image: .*\/kafka-trigger-controller:.*/image: kubeless\/kafka-trigger-controller:'"${CONTROLLER_TAG}"'/g' ${f}.yaml
-            cp ${f}.yaml build-manifests/
-          done
+      - run: make build-manifests
       - persist_to_workspace:
           root: /go
           paths:

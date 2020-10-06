@@ -82,3 +82,7 @@ bootstrap: bats ksonnet-lib
 
 build_and_test:
 	./script/start-test-environment.sh "make binary && make controller-image CONTROLLER_IMAGE=bitnami/kubeless-controller-manager:latest && make integration-tests"
+
+.PHONY: build-manifests
+build-manifests:
+	./script/build-manifests.sh
