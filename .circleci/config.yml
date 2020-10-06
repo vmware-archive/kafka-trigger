@@ -131,6 +131,7 @@ jobs:
       - attach_workspace:
           at: /tmp/go
       - <<: *restore_workspace
+      - run: "env | sort"
       - run: ./script/pull-or-build-image.sh kafka-controller-image
       - run: ./script/integration-tests minikube deployment
       - run: ./script/integration-tests minikube kafka
