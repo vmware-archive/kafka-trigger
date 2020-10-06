@@ -59,6 +59,8 @@ workflows:
             - build
           matrix:
             parameters:
+              # Amazon EKS Kubernetes versions
+              # See https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
               k8s-version: ["v1.14.9", "v1.15.11", "v1.16.13", "v1.17.9", "v1.18.9"]
       - push_latest_images:
           filters:
@@ -131,6 +133,7 @@ jobs:
       - attach_workspace:
           at: /tmp/go
       - <<: *restore_workspace
+      - run: env
       - run: ./script/pull-or-build-image.sh kafka-controller-image
       - run: ./script/integration-tests minikube deployment
       - run: ./script/integration-tests minikube kafka
