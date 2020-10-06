@@ -32,7 +32,7 @@ fi
 
 GIT_COMMIT=$(git describe --tags --dirty --always)
 BUILD_DATE=$(date)
-BUILD_FLAGS=(-ldflags="-w -X github.com/kubeless/kubeless/pkg/version.Version=${GIT_COMMIT}" -mod=vendor)
+BUILD_FLAGS=(-ldflags="-w -X github.com/kubeless/kubeless/pkg/version.Version=${GIT_COMMIT}")
 
 # Get rid of existing binaries
 rm -rf bundles/kubeless*
@@ -41,4 +41,4 @@ rm -rf bundles/kubeless*
 gox "${OS_PLATFORM_ARG[@]}" "${OS_ARCH_ARG[@]}" \
     -output="bundles/kubeless_{{.OS}}-{{.Arch}}/kafka-controller" \
     "${BUILD_FLAGS[@]}" \
-    github.com/kubeless/kafka-trigger/cmd/kafka-trigger-controller
+    ./cmd/kafka-trigger-controller

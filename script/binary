@@ -18,7 +18,7 @@ set -e
 
 
 GIT_COMMIT=$(git describe --tags --dirty --always)
-BUILD_FLAGS=(-ldflags="-w -X github.com/kubeless/kafka-trigger/pkg/version.Version=${GIT_COMMIT}" -mod=vendor)
+BUILD_FLAGS=(-ldflags="-w -X github.com/kubeless/kafka-trigger/pkg/version.Version=${GIT_COMMIT}")
 
 # Get rid of existing binary
 echo "Removing Old Kafka trigger controller binary"
@@ -28,7 +28,7 @@ echo "Build Kafka trigger controller binary"
 # Build binary
 go install \
     "${BUILD_FLAGS[@]}" \
-    github.com/kubeless/kafka-trigger/cmd/...
+    ./cmd/...
 
 if [ $? -eq 0 ]; then
   echo "Build Kafka trigger controller binary successful. Program saved at ${GOPATH%%:*}/bin"

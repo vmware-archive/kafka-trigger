@@ -164,3 +164,4 @@ kafka-zookeeper-openshift.yaml
 nats.yaml
 kinesis.yaml
 /kubeless
+vendor/
