@@ -10,7 +10,6 @@ defaults: &defaults
     KAFKA_CONTROLLER_IMAGE_NAME: kubeless/kafka-trigger-controller
     CGO_ENABLED: "0"
     TEST_DEBUG: "1"
-    MINIKUBE_KUBERNETES_VERSION: v1.14.9
     MINIKUBE_VERSION: v1.13.1
     MANIFESTS: kafka-zookeeper kafka-zookeeper-openshift
 exports: &exports
@@ -120,6 +119,11 @@ jobs:
     <<: *defaults
     machine:
       image: ubuntu-1604:202007-01
+    parameters:
+      k8s-version:
+        type: string
+    environment:
+      MINIKUBE_KUBERNETES_VERSION: << parameters.k8s-version >>
     steps:
       - <<: *should_test
       - checkout
