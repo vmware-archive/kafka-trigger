@@ -19,8 +19,9 @@ CONTROLLER_TAG=${CONTROLLER_TAG:?}
 
 CUR_DIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 && pwd -P )"
 
+set -e
 IFS=' ' read -r -a manifests <<< "$MANIFESTS"
 for f in "${manifests[@]}"; do
     sed -E -i.bak 's/image: .*\/kafka-trigger-controller:.*/image: kubeless\/kafka-trigger-controller:'"${CONTROLLER_TAG}"'/g' "${CUR_DIR}/../${f}.yaml"
-    cp "${CUR_DIR}/../${f}.yaml" "${CUR_DIR}/build-manifests/"
+    cp "${CUR_DIR}/../${f}.yaml" "${CUR_DIR}/../build-manifests/"
 done
