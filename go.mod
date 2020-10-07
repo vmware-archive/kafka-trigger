@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/Shopify/sarama v1.27.0
+	github.com/cenkalti/backoff/v4 v4.0.2 // indirect
 	github.com/coreos/prometheus-operator v0.0.0-20171201110357-197eb012d973
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect

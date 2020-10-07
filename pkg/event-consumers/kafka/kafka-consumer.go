@@ -22,8 +22,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Shopify/sarama"
+	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 
@@ -214,6 +216,10 @@ func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 0 // ... so that b.NextBackOff() never returns backoff.Stop.
+	b.MaxInterval = 60 * time.Second
+
 	for msg := range claim.Messages() {
 		req, err := utils.GetHTTPReq(c.funcName, c.funcPort, msg.Topic, c.ns, kafkatriggersNamespace, "POST", string(msg.Value))
 		if err != nil {
@@ -221,13 +227,18 @@ func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 			continue
 		}
 
-		if err = utils.SendMessage(req); err != nil {
-			logrus.Errorf("Failed to send message (namespace = %v function = %v topic = %v partition = %v offset = %v): %v", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset, err)
-		} else {
-			logrus.Infof("Message sent successfully (namespace = %v function = %v topic = %v partition = %v offset = %v)", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset)
+		err = utils.SendMessage(req)
+		session.MarkMessage(msg, "")
+
+		if err != nil {
+			d := b.NextBackOff()
+			logrus.Errorf("Failed to send message (namespace = %v function = %v topic = %v partition = %v offset = %v): %v: backing off for %v", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset, err, d)
+			time.Sleep(d)
+			continue
 		}
 
-		session.MarkMessage(msg, "")
+		logrus.Infof("Message sent successfully (namespace = %v function = %v topic = %v partition = %v offset = %v)", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset)
+		b.Reset()
 	}
 	return nil
 }
