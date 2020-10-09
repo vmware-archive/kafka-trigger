@@ -33,11 +33,12 @@ import (
 )
 
 var (
-	stopM     map[string]chan struct{}
-	stoppedM  map[string]chan struct{}
-	consumerM map[string]bool
-	brokers   string
-	config    *sarama.Config
+	stopM      map[string]chan struct{}
+	stoppedM   map[string]chan struct{}
+	consumerM  map[string]bool
+	brokers    string
+	maxBackOff time.Duration
+	config     *sarama.Config
 )
 
 const clientID = "kubeless-kafka-trigger-controller"
@@ -58,6 +59,14 @@ func init() {
 	brokers = os.Getenv("KAFKA_BROKERS")
 	if brokers == "" {
 		brokers = defaultBrokers
+	}
+
+	if s := os.Getenv("BACKOFF_INTERVAL"); len(s) > 0 {
+		if d, err := time.ParseDuration(s); err == nil {
+			maxBackOff = d
+		} else {
+			logrus.Errorf("Failed to parse maximum back off interval BACKOFF_INTERVAL: %v", err)
+		}
 	}
 
 	config = sarama.NewConfig()
@@ -103,7 +112,7 @@ func createConsumerProcess(topic, funcName, ns, consumerGroupID string, clientse
 	}
 
 	ready := make(chan struct{})
-	consumer := NewConsumer(funcName, funcPort, ns, clientset, ready)
+	consumer := NewConsumer(funcName, funcPort, ns, clientset, ready, maxBackOff)
 	errchan := group.Errors()
 
 	go func() {
@@ -184,16 +193,18 @@ type Consumer struct {
 	ns        string
 	clientset kubernetes.Interface
 	ready     chan struct{}
+	backoff   time.Duration
 }
 
 // NewConsumer returns new consumer.
-func NewConsumer(funcName string, funcPort int, ns string, clientset kubernetes.Interface, ready chan struct{}) *Consumer {
+func NewConsumer(funcName string, funcPort int, ns string, clientset kubernetes.Interface, ready chan struct{}, backoff time.Duration) *Consumer {
 	return &Consumer{
 		clientset: clientset,
 		funcName:  funcName,
 		funcPort:  funcPort,
 		ns:        ns,
 		ready:     ready,
+		backoff:   backoff,
 	}
 }
 
@@ -216,9 +227,7 @@ func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 0 // ... so that b.NextBackOff() never returns backoff.Stop.
-	b.MaxInterval = 60 * time.Second
+	b := getBackOff(c.backoff)
 
 	for msg := range claim.Messages() {
 		req, err := utils.GetHTTPReq(c.funcName, c.funcPort, msg.Topic, c.ns, kafkatriggersNamespace, "POST", string(msg.Value))
@@ -241,4 +250,25 @@ func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 		b.Reset()
 	}
 	return nil
+}
+
+type backOff interface {
+	NextBackOff() time.Duration
+	Reset()
+}
+
+type noopBackOff struct{}
+
+func (noopBackOff) NextBackOff() time.Duration { return 0 }
+func (noopBackOff) Reset()                     {}
+
+func getBackOff(maxBackOff time.Duration) backOff {
+	if maxBackOff < 1 {
+		return noopBackOff{}
+	}
+
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 0 // ... so that b.NextBackOff() never returns backoff.Stop.
+	b.MaxInterval = maxBackOff
+	return b
 }
