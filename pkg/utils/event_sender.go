@@ -48,7 +48,7 @@ func GetFunctionPort(clientset kubernetes.Interface, namespace, functionName str
 }
 
 // GetHTTPReq returns the http request object that can be used to send a event with payload to function service
-func GetHTTPReq(funcName string, funcPort int, kafkaMessage sarama.ConsumerMessage, namespace, eventNamespace string) (*http.Request, error) {
+func GetHTTPReq(funcName string, funcPort int, kafkaMessage *sarama.ConsumerMessage, namespace, eventNamespace string) (*http.Request, error) {
 	body := string(kafkaMessage.Value)
 	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", funcName, namespace, funcPort), strings.NewReader(body))
 	if err != nil {
