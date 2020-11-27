@@ -5,7 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	kubeless "github.com/kubeless/kafka-trigger/pkg/apis/kubeless"
+	kubeless "github.com/uedun/kafka-trigger/pkg/apis/kubeless"
 )
 
 // SchemeGroupVersion is group version used to register these objects

@@ -16,9 +16,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned"
-	kubelessv1beta1 "github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned/typed/kubeless/v1beta1"
-	fakekubelessv1beta1 "github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned/typed/kubeless/v1beta1/fake"
+	clientset "github.com/uedun/kafka-trigger/pkg/client/clientset/versioned"
+	kubelessv1beta1 "github.com/uedun/kafka-trigger/pkg/client/clientset/versioned/typed/kubeless/v1beta1"
+	fakekubelessv1beta1 "github.com/uedun/kafka-trigger/pkg/client/clientset/versioned/typed/kubeless/v1beta1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

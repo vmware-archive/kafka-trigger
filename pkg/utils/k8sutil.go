@@ -24,7 +24,7 @@ import (
 	"os"
 	"path/filepath"
 
-	kafkaApi "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
+	kafkaApi "github.com/uedun/kafka-trigger/pkg/apis/kubeless/v1beta1"
 	"github.com/sirupsen/logrus"
 
 	"k8s.io/api/autoscaling/v2beta1"
@@ -45,7 +45,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 
 	"github.com/imdario/mergo"
-	"github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned"
+	"github.com/uedun/kafka-trigger/pkg/client/clientset/versioned"
 )
 
 const (

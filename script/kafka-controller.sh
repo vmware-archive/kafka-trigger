@@ -32,7 +32,7 @@ fi
 
 GIT_COMMIT=$(git describe --tags --dirty --always)
 BUILD_DATE=$(date)
-BUILD_FLAGS=(-ldflags="-w -X github.com/kubeless/kafka-trigger/pkg/version.Version=${GIT_COMMIT}")
+BUILD_FLAGS=(-ldflags="-w -X github.com/uedun/kafka-trigger/pkg/version.Version=${GIT_COMMIT}")
 
 # Get rid of existing binaries
 rm -rf bundles/kubeless*

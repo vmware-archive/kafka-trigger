@@ -20,12 +20,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/Shopify/sarama"
 	kubelessutil "github.com/kubeless/kubeless/pkg/utils"
 )
 
@@ -46,8 +48,9 @@ func GetFunctionPort(clientset kubernetes.Interface, namespace, functionName str
 }
 
 // GetHTTPReq returns the http request object that can be used to send a event with payload to function service
-func GetHTTPReq(funcName string, funcPort int, kafkaTopic, namespace, eventNamespace, method, body string) (*http.Request, error) {
-	req, err := http.NewRequest(method, fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", funcName, namespace, funcPort), strings.NewReader(body))
+func GetHTTPReq(funcName string, funcPort int, kafkaMessage sarama.ConsumerMessage, namespace, eventNamespace string) (*http.Request, error) {
+	body := string(kafkaMessage.Value)
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", funcName, namespace, funcPort), strings.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request %v", err)
 	}
@@ -56,10 +59,16 @@ func GetHTTPReq(funcName string, funcPort int, kafkaTopic, namespace, eventNames
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create a event-ID %v", err)
 	}
+	messageTimestamp := kafkaMessage.Timestamp.UTC().Format(time.RFC3339)
 	req.Header.Add("event-id", eventID)
 	req.Header.Add("event-time", timestamp.String())
 	req.Header.Add("event-namespace", eventNamespace)
-	req.Header.Add("event-topic", kafkaTopic)
+	req.Header.Add("event-topic", kafkaMessage.Topic)
+	req.Header.Add("event-partition", strconv.FormatInt(int64(kafkaMessage.Partition), 10))
+	req.Header.Add("event-offset", strconv.FormatInt(kafkaMessage.Offset, 10))
+	req.Header.Add("event-key", string(kafkaMessage.Key))
+	req.Header.Add("event-message-timestamp", messageTimestamp)
+
 	if IsJSON(body) {
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("event-type", "application/json")

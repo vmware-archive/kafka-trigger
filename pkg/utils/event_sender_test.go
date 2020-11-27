@@ -18,10 +18,23 @@ package utils
 import (
 	"io/ioutil"
 	"testing"
+
+	"github.com/Shopify/sarama"
 )
 
+func GenKafkaBodyMessage(b string) sarama.ConsumerMessage {
+	var msg sarama.ConsumerMessage
+	msg.Offset = int64(10)
+	msg.Topic = "mytopic"
+	msg.Partition = int32(2)
+	msg.Value = []byte(b)
+	return msg
+}
 func TestGetHTTPRequest(t *testing.T) {
-	req, err := GetHTTPReq("foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", "my msg")
+	value := "my msg"
+	msg := GenKafkaBodyMessage(value)
+	req, err := GetHTTPReq("foo", 1234, msg, "myns", "kafkatriggers.kubeless.io")
+	req.Method = "POST"
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
@@ -56,10 +69,17 @@ func TestGetHTTPRequest(t *testing.T) {
 	if req.Header.Get("event-topic") != "mytopic" {
 		t.Errorf("Unexpected event-topic %s", req.Header.Get("event-topic"))
 	}
+	if req.Header.Get("event-offset") != "10" {
+		t.Errorf("Unexpected event-offset %s", req.Header.Get("event-offset"))
+	}
 }
 
 func TestGetJSONHTTPRequest(t *testing.T) {
-	req, err := GetHTTPReq("foo", 1234, "mytopic", "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
+	value := `{"hello": "world"}`
+	msg := GenKafkaBodyMessage(value)
+	req, err := GetHTTPReq("foo", int(1234), msg, "myns", "kafkatriggers.kubeless.io")
+	req.Method = "POST"
+	// req, err := GetHTTPReq("foo", 1234, msg, "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}

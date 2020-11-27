@@ -19,7 +19,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	internalinterfaces "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/uedun/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.
