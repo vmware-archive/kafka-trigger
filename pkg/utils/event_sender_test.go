@@ -22,7 +22,7 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-func GenKafkaBodyMessage(b string) sarama.ConsumerMessage {
+func GenConsumerMessageWithBody(body string) sarama.ConsumerMessage {
 	return sarama.ConsumerMessage {
 	    Offset: 1023435314301,
 	    Partition: 2,
