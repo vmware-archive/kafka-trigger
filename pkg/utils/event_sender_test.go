@@ -23,12 +23,12 @@ import (
 )
 
 func GenKafkaBodyMessage(b string) sarama.ConsumerMessage {
-	var msg sarama.ConsumerMessage
-	msg.Offset = int64(10)
-	msg.Topic = "mytopic"
-	msg.Partition = int32(2)
-	msg.Value = []byte(b)
-	return msg
+	return sarama.ConsumerMessage {
+	    Offset: 1023435314301,
+	    Partition: 2,
+	    Topic: "mytopic",
+	    Value: []byte(body)
+	}
 }
 func TestGetHTTPRequest(t *testing.T) {
 	value := "my msg"
