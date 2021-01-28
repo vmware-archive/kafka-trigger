@@ -27,6 +27,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	kubelessutil "github.com/kubeless/kubeless/pkg/utils"
+
+	"github.com/kubeless/kafka-trigger/pkg/version"
 )
 
 // IsJSON returns true if the string is json
@@ -48,6 +50,7 @@ func GetFunctionPort(clientset kubernetes.Interface, namespace, functionName str
 // GetHTTPReq returns the http request object that can be used to send a event with payload to function service
 func GetHTTPReq(funcName string, funcPort int, kafkaTopic, namespace, eventNamespace, method, body string) (*http.Request, error) {
 	req, err := http.NewRequest(method, fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", funcName, namespace, funcPort), strings.NewReader(body))
+	req.Header.Set("User-Agent", fmt.Sprintf("kubeless/kafka-trigger-controller %s", version.Version))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request %v", err)
 	}
