@@ -53,7 +53,7 @@ func GetHTTPReq(funcName string, funcPort int, kafkaTopic, namespace, eventNames
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request %v", err)
 	}
-	req.Header.Set("User-Agent", fmt.Sprintf("kubeless/kafka-trigger-controller %s", version.Version))
+	req.Header.Set("User-Agent", fmt.Sprintf("kubeless-kafka-trigger-controller/%s", version.Version))
 	timestamp := time.Now().UTC()
 	eventID, err := kubelessutil.GetRandString(11)
 	if err != nil {
