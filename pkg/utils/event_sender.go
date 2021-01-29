@@ -27,6 +27,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	kubelessutil "github.com/kubeless/kubeless/pkg/utils"
+
+	"github.com/kubeless/kafka-trigger/pkg/version"
 )
 
 // IsJSON returns true if the string is json
@@ -51,6 +53,7 @@ func GetHTTPReq(funcName string, funcPort int, kafkaTopic, namespace, eventNames
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request %v", err)
 	}
+	req.Header.Set("User-Agent", fmt.Sprintf("kubeless-kafka-trigger-controller/%s", version.Version))
 	timestamp := time.Now().UTC()
 	eventID, err := kubelessutil.GetRandString(11)
 	if err != nil {
