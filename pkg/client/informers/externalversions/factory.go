@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/uedun/kafka-trigger/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/uedun/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
-	kubeless "github.com/uedun/kafka-trigger/pkg/client/informers/externalversions/kubeless"
+	versioned "github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
+	kubeless "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/kubeless"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

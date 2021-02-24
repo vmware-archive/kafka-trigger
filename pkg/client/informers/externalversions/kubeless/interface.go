@@ -19,8 +19,8 @@ limitations under the License.
 package kubeless
 
 import (
-	internalinterfaces "github.com/uedun/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/uedun/kafka-trigger/pkg/client/informers/externalversions/kubeless/v1beta1"
+	internalinterfaces "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
+	v1beta1 "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/kubeless/v1beta1"
 )
 
 // Interface provides access to each of this group's versions.

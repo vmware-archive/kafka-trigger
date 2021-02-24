@@ -25,9 +25,9 @@ import (
 	kubelessutils "github.com/kubeless/kubeless/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/uedun/kafka-trigger/pkg/controller"
-	kafkautils "github.com/uedun/kafka-trigger/pkg/utils"
-	"github.com/uedun/kafka-trigger/pkg/version"
+	"github.com/kubeless/kafka-trigger/pkg/controller"
+	kafkautils "github.com/kubeless/kafka-trigger/pkg/utils"
+	"github.com/kubeless/kafka-trigger/pkg/version"
 )
 
 const (

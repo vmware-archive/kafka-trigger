@@ -21,10 +21,10 @@ package v1beta1
 import (
 	time "time"
 
-	kubeless_v1beta1 "github.com/uedun/kafka-trigger/pkg/apis/kubeless/v1beta1"
-	versioned "github.com/uedun/kafka-trigger/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/uedun/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/uedun/kafka-trigger/pkg/client/listers/kubeless/v1beta1"
+	kubeless_v1beta1 "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
+	versioned "github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/internalinterfaces"
+	v1beta1 "github.com/kubeless/kafka-trigger/pkg/client/listers/kubeless/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

@@ -16,7 +16,7 @@ limitations under the License.
 package scheme
 
 import (
-	kubelessv1beta1 "github.com/uedun/kafka-trigger/pkg/apis/kubeless/v1beta1"
+	kubelessv1beta1 "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

@@ -16,25 +16,32 @@ limitations under the License.
 package utils
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	"github.com/Shopify/sarama"
 )
 
-func GenConsumerMessageWithBody(body string) sarama.ConsumerMessage {
-	return sarama.ConsumerMessage {
-	    Offset: 1023435314301,
-	    Partition: 2,
-	    Topic: "mytopic",
-	    Value: []byte(body)
+func GenConsumerMessageWithBody(body string) *sarama.ConsumerMessage {
+	timestamp, err := time.Parse(time.RFC3339, "2020-11-27T14:41:29+02:00")
+	if err != nil {
+		fmt.Println("Unable to parse time")
+	}
+	return &sarama.ConsumerMessage{
+		Offset:    1023435314301,
+		Partition: 2,
+		Topic:     "mytopic",
+		Value:     []byte(body),
+		Key:       []byte("1234"),
+		Timestamp: timestamp,
 	}
 }
 func TestGetHTTPRequest(t *testing.T) {
 	value := "my msg"
-	msg := GenKafkaBodyMessage(value)
+	msg := GenConsumerMessageWithBody(value)
 	req, err := GetHTTPReq("foo", 1234, msg, "myns", "kafkatriggers.kubeless.io")
-	req.Method = "POST"
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}
@@ -69,16 +76,21 @@ func TestGetHTTPRequest(t *testing.T) {
 	if req.Header.Get("event-topic") != "mytopic" {
 		t.Errorf("Unexpected event-topic %s", req.Header.Get("event-topic"))
 	}
-	if req.Header.Get("event-offset") != "10" {
+	if req.Header.Get("event-offset") != "1023435314301" {
 		t.Errorf("Unexpected event-offset %s", req.Header.Get("event-offset"))
+	}
+	if req.Header.Get("event-message-timestamp") != "2020-11-27T12:41:29Z" {
+		t.Errorf("Unexpected event-message-timestamp %s", req.Header.Get("event-message-timestamp"))
+	}
+	if req.Header.Get("event-key") != "1234" {
+		t.Errorf("Unexpected event-key %s", req.Header.Get("event-key"))
 	}
 }
 
 func TestGetJSONHTTPRequest(t *testing.T) {
 	value := `{"hello": "world"}`
-	msg := GenKafkaBodyMessage(value)
+	msg := GenConsumerMessageWithBody(value)
 	req, err := GetHTTPReq("foo", int(1234), msg, "myns", "kafkatriggers.kubeless.io")
-	req.Method = "POST"
 	// req, err := GetHTTPReq("foo", 1234, msg, "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)

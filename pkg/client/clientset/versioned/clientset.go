@@ -17,7 +17,7 @@ package versioned
 
 import (
 	glog "github.com/golang/glog"
-	kubelessv1beta1 "github.com/uedun/kafka-trigger/pkg/client/clientset/versioned/typed/kubeless/v1beta1"
+	kubelessv1beta1 "github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned/typed/kubeless/v1beta1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

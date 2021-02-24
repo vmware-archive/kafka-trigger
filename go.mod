@@ -1,4 +1,4 @@
-module github.com/uedun/kafka-trigger
+module github.com/kubeless/kafka-trigger
 
 go 1.12
 

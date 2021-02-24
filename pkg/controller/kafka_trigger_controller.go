@@ -35,11 +35,11 @@ import (
 	kubelessversioned "github.com/kubeless/kubeless/pkg/client/clientset/versioned"
 	kubelessInformers "github.com/kubeless/kubeless/pkg/client/informers/externalversions/kubeless/v1beta1"
 	kubelessutils "github.com/kubeless/kubeless/pkg/utils"
-	kafkaApi "github.com/uedun/kafka-trigger/pkg/apis/kubeless/v1beta1"
-	"github.com/uedun/kafka-trigger/pkg/client/clientset/versioned"
-	kafkaInformers "github.com/uedun/kafka-trigger/pkg/client/informers/externalversions/kubeless/v1beta1"
-	"github.com/uedun/kafka-trigger/pkg/event-consumers/kafka"
-	"github.com/uedun/kafka-trigger/pkg/utils"
+	kafkaApi "github.com/kubeless/kafka-trigger/pkg/apis/kubeless/v1beta1"
+	"github.com/kubeless/kafka-trigger/pkg/client/clientset/versioned"
+	kafkaInformers "github.com/kubeless/kafka-trigger/pkg/client/informers/externalversions/kubeless/v1beta1"
+	"github.com/kubeless/kafka-trigger/pkg/event-consumers/kafka"
+	"github.com/kubeless/kafka-trigger/pkg/utils"
 )
 
 const (
