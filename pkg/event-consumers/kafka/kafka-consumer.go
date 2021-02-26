@@ -230,7 +230,7 @@ func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 	b := getBackOff(c.backoff)
 
 	for msg := range claim.Messages() {
-		req, err := utils.GetHTTPReq(c.funcName, c.funcPort, msg.Topic, c.ns, kafkatriggersNamespace, "POST", string(msg.Value))
+		req, err := utils.GetHTTPReq(c.funcName, c.funcPort, msg, c.ns, kafkatriggersNamespace)
 		if err != nil {
 			logrus.Errorf("Unable to elaborate request (namespace = %v function = %v topic = %v partition = %v offset = %v): %v", c.ns, c.funcName, msg.Topic, msg.Partition, msg.Offset, err)
 			continue

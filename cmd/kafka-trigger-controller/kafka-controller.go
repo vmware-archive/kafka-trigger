@@ -22,12 +22,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/kubeless/kafka-trigger/pkg/controller"
-	kafkautils "github.com/kubeless/kafka-trigger/pkg/utils"
-	"github.com/kubeless/kafka-trigger/pkg/version"
 	kubelessutils "github.com/kubeless/kubeless/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/kubeless/kafka-trigger/pkg/controller"
+	kafkautils "github.com/kubeless/kafka-trigger/pkg/utils"
+	"github.com/kubeless/kafka-trigger/pkg/version"
 )
 
 const (
