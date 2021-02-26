@@ -59,7 +59,6 @@ func GetHTTPReq(funcName string, funcPort int, kafkaMessage *sarama.ConsumerMess
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create a event-ID %v", err)
 	}
-	messageTimestamp := kafkaMessage.Timestamp.UTC().Format(time.RFC3339)
 	req.Header.Add("event-id", eventID)
 	req.Header.Add("event-time", timestamp.String())
 	req.Header.Add("event-namespace", eventNamespace)
@@ -67,7 +66,6 @@ func GetHTTPReq(funcName string, funcPort int, kafkaMessage *sarama.ConsumerMess
 	req.Header.Add("event-partition", strconv.FormatInt(int64(kafkaMessage.Partition), 10))
 	req.Header.Add("event-offset", strconv.FormatInt(kafkaMessage.Offset, 10))
 	req.Header.Add("event-key", string(kafkaMessage.Key))
-	req.Header.Add("event-message-timestamp", messageTimestamp)
 
 	if IsJSON(body) {
 		req.Header.Add("Content-Type", "application/json")

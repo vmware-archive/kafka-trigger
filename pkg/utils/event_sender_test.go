@@ -79,9 +79,6 @@ func TestGetHTTPRequest(t *testing.T) {
 	if req.Header.Get("event-offset") != "1023435314301" {
 		t.Errorf("Unexpected event-offset %s", req.Header.Get("event-offset"))
 	}
-	if req.Header.Get("event-message-timestamp") != "2020-11-27T12:41:29Z" {
-		t.Errorf("Unexpected event-message-timestamp %s", req.Header.Get("event-message-timestamp"))
-	}
 	if req.Header.Get("event-key") != "1234" {
 		t.Errorf("Unexpected event-key %s", req.Header.Get("event-key"))
 	}
@@ -91,7 +88,6 @@ func TestGetJSONHTTPRequest(t *testing.T) {
 	value := `{"hello": "world"}`
 	msg := GenConsumerMessageWithBody(value)
 	req, err := GetHTTPReq("foo", int(1234), msg, "myns", "kafkatriggers.kubeless.io")
-	// req, err := GetHTTPReq("foo", 1234, msg, "myns", "kafkatriggers.kubeless.io", "POST", `{"hello": "world"}`)
 	if err != nil {
 		t.Errorf("Unexpected error %v", err)
 	}

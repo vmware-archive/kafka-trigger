@@ -10,7 +10,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/imdario/mergo v0.3.7
 	github.com/kubeless/kubeless v1.0.7
-	github.com/mitchellh/gox v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.3
 	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
